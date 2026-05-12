@@ -1,10 +1,14 @@
 import { useState } from "react";
 import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
 
     const [email, setEmail] = useState("");
+
     const [password, setPassword] = useState("");
+
+    const navigate = useNavigate();
 
     const handleLogin = async (e) => {
 
@@ -12,33 +16,43 @@ function Login() {
 
         try {
 
-            const response = await api.post("/auth/login", {
-                email,
-                password
-            });
+            const response = await api.post(
+                "/auth/login",
+                {
+                    email,
+                    password
+                }
+            );
 
-            // store JWT token
-            localStorage.setItem("token", response.data);
+            localStorage.setItem(
+                "token",
+                response.data
+            );
 
             alert("Login Successful");
 
             console.log(response.data);
 
+            navigate("/dashboard");
+
         } catch (error) {
 
-    console.log(error);
+            console.log(error);
 
-    if (error.response) {
+            if (error.response) {
 
-        console.log(error.response.data);
+                console.log(error.response.data);
 
-        alert(error.response.data.message || "Login Failed");
+                alert(
+                    error.response.data.message
+                    || "Login Failed"
+                );
 
-    } else {
+            } else {
 
-        alert("Backend connection error");
-    }
-}
+                alert("Backend connection error");
+            }
+        }
     };
 
     return (
@@ -50,6 +64,7 @@ function Login() {
             <form onSubmit={handleLogin}>
 
                 <div>
+
                     <input
                         type="email"
                         placeholder="Enter Email"
@@ -58,11 +73,13 @@ function Login() {
                             setEmail(e.target.value)
                         }
                     />
+
                 </div>
 
                 <br />
 
                 <div>
+
                     <input
                         type="password"
                         placeholder="Enter Password"
@@ -71,6 +88,7 @@ function Login() {
                             setPassword(e.target.value)
                         }
                     />
+
                 </div>
 
                 <br />
