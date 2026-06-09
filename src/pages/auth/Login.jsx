@@ -5,6 +5,9 @@ import { loginUser } from "../../services/authService";
 
 import useAuth from "../../auth/useAuth";
 
+import toast from "react-hot-toast";
+
+
 const Login = () => {
   const navigate = useNavigate();
 
@@ -24,28 +27,35 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const response = await loginUser(formData);
-      console.log(response);
+    const response = await loginUser(formData);
 
-      login(response.token, {
-        email: formData.email,
-        role: "STUDENT",
-      });
-      navigate("/dashboard");
-    } catch (error) {
-      console.log(error);
+    console.log("LOGIN RESPONSE:", response);
 
-      alert(error.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    login(response.token, {
+      email: response.email,
+      role: response.role,
+    });
+
+    navigate("/dashboard");
+
+  } catch (error) {
+
+    console.log(error);
+
+    toast.error(
+  "Login failed"
+);
+  } finally {
+
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
