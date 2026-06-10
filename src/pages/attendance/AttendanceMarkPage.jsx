@@ -9,6 +9,8 @@ import {
   markAttendance,
 } from "../../services/attendanceService";
 
+import toast from "react-hot-toast";
+
 const AttendanceMarkPage = () => {
 
   const [courses, setCourses] =
@@ -69,7 +71,7 @@ const AttendanceMarkPage = () => {
         present,
       });
 
-      alert(
+      toast.success(
         "Attendance Saved"
       );
     };

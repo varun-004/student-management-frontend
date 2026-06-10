@@ -6,6 +6,9 @@ import {
   getStudentGPA,
 } from "../../services/marksService";
 
+import toast from "react-hot-toast";
+
+
 const StudentMarksReportPage = () => {
 
   const [studentId, setStudentId] =
@@ -55,7 +58,7 @@ const StudentMarksReportPage = () => {
 
       console.error(err);
 
-      alert(
+      toast.error(
         "Failed to load report"
       );
     }

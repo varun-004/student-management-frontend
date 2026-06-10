@@ -7,6 +7,8 @@ import {
   getCourseById,
 } from "../../services/courseService";
 
+import toast from "react-hot-toast";
+
 const MarksEntryPage = () => {
 
   const [formData, setFormData] =
@@ -141,7 +143,7 @@ const MarksEntryPage = () => {
           ),
       });
 
-      alert(
+      toast.success(
         "Marks added successfully"
       );
 
@@ -158,7 +160,7 @@ const MarksEntryPage = () => {
 
       console.error(err);
 
-      alert(
+      toast.error(
         "Failed to add marks"
       );
 

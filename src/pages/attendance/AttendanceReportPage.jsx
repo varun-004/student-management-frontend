@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getAttendancePercentage } from "../../services/attendanceService";
+import toast from "react-hot-toast";
 
 const AttendanceReportPage = () => {
 
@@ -24,7 +25,7 @@ const AttendanceReportPage = () => {
 
       console.error(err);
 
-      alert(
+      toast.error(
         "Failed to load report"
       );
     }

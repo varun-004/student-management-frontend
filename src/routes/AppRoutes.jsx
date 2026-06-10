@@ -22,7 +22,7 @@ import AttendanceReportPage from "../pages/attendance/AttendanceReportPage";
 
 import MarksEntryPage from "../pages/marks/MarksEntryPage";
 import StudentMarksReportPage from "../pages/marks/StudentMarksReportPage.jsx";
-// import TopPerformersPage from "../pages/marks/TopPerformersPage";
+import TopPerformersPage from "../pages/marks/TopPerformersPage";
 
 import StudentRiskPage from "../pages/analytics/StudentRiskPage";
 
@@ -143,7 +143,7 @@ const AppRoutes = () => {
           }
         />
 
-        {/* <Route
+        <Route
           path="/marks/top-performers"
           element={
             <ProtectedRoute>
@@ -152,7 +152,7 @@ const AppRoutes = () => {
               </DashboardLayout>
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route
           path="/analytics/risk"

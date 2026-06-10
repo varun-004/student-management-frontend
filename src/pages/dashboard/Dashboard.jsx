@@ -25,11 +25,9 @@ const Dashboard = () => {
   try {
     setLoading(true);
 
-    console.log("Loading dashboard...");
 
     const data = await getDashboardAnalytics();
 
-    console.log("Dashboard data:", data);
 
     setDashboardData(data);
 

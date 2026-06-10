@@ -69,3 +69,21 @@ export const getStudentGPA =
 
     return response.data;
   };
+
+
+  /*
+|--------------------------------------------------------------------------
+| TOP PERFORMERS
+|--------------------------------------------------------------------------
+*/
+
+export const getTopPerformers =
+  async () => {
+
+    const response =
+      await api.get(
+        "/api/marks/top-performers"
+      );
+
+    return response.data;
+  };

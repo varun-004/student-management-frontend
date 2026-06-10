@@ -35,7 +35,6 @@ const Login = () => {
 
     const response = await loginUser(formData);
 
-    console.log("LOGIN RESPONSE:", response);
 
     login(response.token, {
       email: response.email,

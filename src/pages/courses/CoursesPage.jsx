@@ -38,7 +38,6 @@ const CoursesPage = () => {
 
         const data = await getAllCourses();
 
-        console.log(data);
 
         setCourses(data.content);
       } catch (err) {

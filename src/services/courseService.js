@@ -4,12 +4,10 @@ const BASE_URL = "/api/courses";
 
 export const getAllCourses = async () => {
 
-  console.log("Calling:", BASE_URL);
 
   const response =
     await api.get(BASE_URL);
 
-  console.log(response);
 
   return response.data;
 };
