@@ -1,36 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const CourseForm = ({ onSubmit, loading }) => {
-  const [formData, setFormData] = useState({
-    courseName: "",
-    courseCode: "",
-    description: "",
-    credits: 0,
-  });
+import { getAllTeachers }
+from "../../services/adminTeacherService";
 
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLE CHANGE
-  |--------------------------------------------------------------------------
-  */
+const CourseForm = ({
+  onSubmit,
+  loading
+}) => {
+
+  const [teachers,
+         setTeachers] =
+         useState([]);
+
+  const [formData,
+         setFormData] =
+         useState({
+           courseName: "",
+           courseCode: "",
+           description: "",
+           credits: 0,
+           teacherId: ""
+         });
+
+  useEffect(() => {
+
+    const loadTeachers =
+      async () => {
+
+        try {
+
+          const data =
+            await getAllTeachers();
+
+          setTeachers(data);
+
+        } catch (error) {
+
+          console.error(error);
+
+        }
+      };
+
+    loadTeachers();
+
+  }, []);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
+
+    setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value
     }));
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLE SUBMIT
-  |--------------------------------------------------------------------------
-  */
-
   const handleSubmit = (e) => {
+
     e.preventDefault();
 
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      teacherId:
+        Number(
+          formData.teacherId
+        )
+    });
   };
 
   return (
@@ -38,9 +72,18 @@ const CourseForm = ({ onSubmit, loading }) => {
       onSubmit={handleSubmit}
       className="space-y-4"
     >
+
       {/* COURSE NAME */}
+
       <div>
-        <label className="block mb-1 font-medium">
+
+        <label
+          className="
+            block
+            mb-1
+            font-medium
+          "
+        >
           Course Name
         </label>
 
@@ -50,14 +93,29 @@ const CourseForm = ({ onSubmit, loading }) => {
           value={formData.courseName}
           onChange={handleChange}
           placeholder="Enter course name"
-          className="w-full border rounded-lg px-3 py-2"
+          className="
+            w-full
+            border
+            rounded-lg
+            px-3
+            py-2
+          "
           required
         />
+
       </div>
 
       {/* COURSE CODE */}
+
       <div>
-        <label className="block mb-1 font-medium">
+
+        <label
+          className="
+            block
+            mb-1
+            font-medium
+          "
+        >
           Course Code
         </label>
 
@@ -67,14 +125,29 @@ const CourseForm = ({ onSubmit, loading }) => {
           value={formData.courseCode}
           onChange={handleChange}
           placeholder="Enter course code"
-          className="w-full border rounded-lg px-3 py-2"
+          className="
+            w-full
+            border
+            rounded-lg
+            px-3
+            py-2
+          "
           required
         />
+
       </div>
 
       {/* DESCRIPTION */}
+
       <div>
-        <label className="block mb-1 font-medium">
+
+        <label
+          className="
+            block
+            mb-1
+            font-medium
+          "
+        >
           Description
         </label>
 
@@ -84,13 +157,28 @@ const CourseForm = ({ onSubmit, loading }) => {
           onChange={handleChange}
           placeholder="Enter description"
           rows="4"
-          className="w-full border rounded-lg px-3 py-2"
+          className="
+            w-full
+            border
+            rounded-lg
+            px-3
+            py-2
+          "
         />
+
       </div>
 
       {/* CREDITS */}
+
       <div>
-        <label className="block mb-1 font-medium">
+
+        <label
+          className="
+            block
+            mb-1
+            font-medium
+          "
+        >
           Credits
         </label>
 
@@ -100,19 +188,88 @@ const CourseForm = ({ onSubmit, loading }) => {
           value={formData.credits}
           onChange={handleChange}
           placeholder="Enter credits"
-          className="w-full border rounded-lg px-3 py-2"
+          className="
+            w-full
+            border
+            rounded-lg
+            px-3
+            py-2
+          "
           required
         />
+
       </div>
 
-      {/* SUBMIT BUTTON */}
+      {/* TEACHER */}
+
+      <div>
+
+        <label
+          className="
+            block
+            mb-1
+            font-medium
+          "
+        >
+          Teacher
+        </label>
+
+        <select
+          name="teacherId"
+          value={formData.teacherId}
+          onChange={handleChange}
+          className="
+            w-full
+            border
+            rounded-lg
+            px-3
+            py-2
+          "
+          required
+        >
+
+          <option value="">
+            Select Teacher
+          </option>
+
+          {teachers.map(
+            teacher => (
+
+              <option
+                key={teacher.id}
+                value={teacher.id}
+              >
+                {teacher.firstName}
+                {" "}
+                {teacher.lastName}
+              </option>
+
+            )
+          )}
+
+        </select>
+
+      </div>
+
+      {/* SUBMIT */}
+
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
+        className="
+          w-full
+          bg-blue-600
+          hover:bg-blue-700
+          text-white
+          py-2
+          rounded-lg
+        "
       >
-        {loading ? "Creating..." : "Create Course"}
+        {loading
+          ? "Creating..."
+          : "Create Course"}
       </button>
+
     </form>
   );
 };

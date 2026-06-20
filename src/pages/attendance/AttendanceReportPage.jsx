@@ -1,86 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { getAttendancePercentage } from "../../services/attendanceService";
-import toast from "react-hot-toast";
+
+import { getStudentByEmail } from "../../services/studentService";
 
 const AttendanceReportPage = () => {
+  const [percentage, setPercentage] = useState(null);
 
-  const [studentId, setStudentId] =
-    useState("");
+  const [loading, setLoading] = useState(true);
 
-  const [percentage, setPercentage] =
-    useState(null);
+  useEffect(() => {
+    const loadAttendance = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
 
-  const handleSearch = async () => {
+        const student = await getStudentByEmail(user.email);
 
-    try {
+        const data = await getAttendancePercentage(student.id);
 
-      const data =
-        await getAttendancePercentage(
-          studentId
-        );
+        setPercentage(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setPercentage(data);
+    loadAttendance();
+  }, []);
 
-    } catch (err) {
-
-      console.error(err);
-
-      toast.error(
-        "Failed to load report"
-      );
-    }
-  };
+  if (loading) {
+    return <h2>Loading...</h2>;
+  }
 
   return (
     <div className="p-6">
-
-      <h1 className="text-3xl font-bold mb-6">
-        Attendance Report
+      <h1
+        className="
+          text-3xl
+          font-bold
+          mb-6
+        "
+      >
+        My Attendance
       </h1>
 
-      <div className="flex gap-4">
-
-        <input
-          type="number"
-          placeholder="Student ID"
-          value={studentId}
-          onChange={(e) =>
-            setStudentId(
-              e.target.value
-            )
-          }
-          className="border px-4 py-2 rounded-lg"
-        />
-
-        <button
-          onClick={handleSearch}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+      <div
+        className="
+          mt-6
+          p-4
+          border
+          rounded-lg
+          bg-white
+          shadow
+        "
+      >
+        <h2
+          className="
+            text-xl
+            font-semibold
+          "
         >
-          Get Report
-        </button>
+          Attendance Percentage
+        </h2>
 
+        <p
+          className="
+    text-3xl
+    font-bold
+    mt-2
+  "
+        >
+          {percentage !== null
+            ? `${Number(percentage).toFixed(2)}%`
+            : "No attendance data"}
+        </p>
       </div>
-
-      {percentage !== null && (
-
-        <div className="mt-6 p-4 border rounded-lg">
-
-          <h2 className="text-xl font-semibold">
-
-            Attendance Percentage
-
-          </h2>
-
-          <p className="text-3xl font-bold mt-2">
-
-            {percentage.toFixed(2)}%
-
-          </p>
-
-        </div>
-
-      )}
-
     </div>
   );
 };

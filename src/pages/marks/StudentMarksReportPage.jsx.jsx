@@ -1,4 +1,7 @@
-import { useState } from "react";
+import {
+  useState,
+  useEffect
+} from "react";
 
 import {
   getStudentMarks,
@@ -6,148 +9,209 @@ import {
   getStudentGPA,
 } from "../../services/marksService";
 
-import toast from "react-hot-toast";
-
+import {
+  getStudentByEmail
+} from "../../services/studentService";
 
 const StudentMarksReportPage = () => {
 
-  const [studentId, setStudentId] =
-    useState("");
+  const [marks,
+         setMarks] =
+         useState([]);
 
-  const [marks, setMarks] =
-    useState([]);
+  const [average,
+         setAverage] =
+         useState(null);
 
-  const [average, setAverage] =
-    useState(null);
+  const [gpa,
+         setGpa] =
+         useState(null);
 
-  const [gpa, setGpa] =
-    useState(null);
+  const [loading,
+         setLoading] =
+         useState(true);
 
-  const handleSearch = async () => {
+  useEffect(() => {
 
-    try {
+    const loadMarks =
+      async () => {
 
-      const marksData =
-        await getStudentMarks(
-          studentId
-        );
+        try {
 
-      const averageData =
-        await getStudentAverage(
-          studentId
-        );
+          const user =
+            JSON.parse(
+              localStorage.getItem("user")
+            );
 
-      const gpaData =
-        await getStudentGPA(
-          studentId
-        );
+          const student =
+            await getStudentByEmail(
+              user.email
+            );
 
-      setMarks(
-        marksData || []
-      );
+          const marksData =
+            await getStudentMarks(
+              student.id
+            );
 
-      setAverage(
-        averageData
-      );
+          const averageData =
+            await getStudentAverage(
+              student.id
+            );
 
-      setGpa(
-        gpaData
-      );
+          const gpaData =
+            await getStudentGPA(
+              student.id
+            );
 
-    } catch (err) {
+          setMarks(
+            marksData || []
+          );
 
-      console.error(err);
+          setAverage(
+            averageData
+          );
 
-      toast.error(
-        "Failed to load report"
-      );
-    }
-  };
+          setGpa(
+            gpaData
+          );
+
+        } catch (error) {
+
+          console.error(error);
+
+        } finally {
+
+          setLoading(false);
+
+        }
+      };
+
+    loadMarks();
+
+  }, []);
+
+  if (loading) {
+
+    return (
+      <h2>
+        Loading...
+      </h2>
+    );
+  }
 
   return (
     <div className="p-6">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Student Marks Report
+      <h1
+        className="
+          text-3xl
+          font-bold
+          mb-6
+        "
+      >
+        My Marks
       </h1>
-
-      {/* SEARCH */}
-
-      <div className="flex gap-4 mb-6">
-
-        <input
-          type="number"
-          placeholder="Student ID"
-          value={studentId}
-          onChange={(e) =>
-            setStudentId(
-              e.target.value
-            )
-          }
-          className="border rounded-lg px-4 py-2"
-        />
-
-        <button
-          onClick={handleSearch}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-        >
-          Load Report
-        </button>
-
-      </div>
-
-      {/* STUDENT INFO */}
 
       {marks.length > 0 && (
 
-        <div className="border rounded-lg p-4 mb-6 bg-white shadow-sm">
+        <div
+          className="
+            border
+            rounded-lg
+            p-4
+            mb-6
+            bg-white
+            shadow-sm
+          "
+        >
 
-          <h2 className="text-xl font-semibold">
-
+          <h2
+            className="
+              text-xl
+              font-semibold
+            "
+          >
             Student:
             {" "}
             {marks[0].studentName}
-
           </h2>
 
         </div>
 
       )}
 
-      {/* STATS */}
-
       {average !== null && (
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            gap-4
+            mb-6
+          "
+        >
 
-          <div className="border rounded-lg p-4 bg-white shadow-sm">
+          <div
+            className="
+              border
+              rounded-lg
+              p-4
+              bg-white
+              shadow-sm
+            "
+          >
 
-            <h3 className="font-semibold text-gray-600">
-
+            <h3
+              className="
+                font-semibold
+                text-gray-600
+              "
+            >
               Average Marks
-
             </h3>
 
-            <p className="text-3xl font-bold text-blue-600 mt-2">
-
+            <p
+              className="
+                text-3xl
+                font-bold
+                text-blue-600
+                mt-2
+              "
+            >
               {average.toFixed(2)}
-
             </p>
 
           </div>
 
-          <div className="border rounded-lg p-4 bg-white shadow-sm">
+          <div
+            className="
+              border
+              rounded-lg
+              p-4
+              bg-white
+              shadow-sm
+            "
+          >
 
-            <h3 className="font-semibold text-gray-600">
-
+            <h3
+              className="
+                font-semibold
+                text-gray-600
+              "
+            >
               GPA
-
             </h3>
 
-            <p className="text-3xl font-bold text-green-600 mt-2">
-
+            <p
+              className="
+                text-3xl
+                font-bold
+                text-green-600
+                mt-2
+              "
+            >
               {gpa.toFixed(2)}
-
             </p>
 
           </div>
@@ -156,11 +220,16 @@ const StudentMarksReportPage = () => {
 
       )}
 
-      {/* MARKS TABLE */}
-
       <div className="overflow-x-auto">
 
-        <table className="w-full border rounded-lg overflow-hidden">
+        <table
+          className="
+            w-full
+            border
+            rounded-lg
+            overflow-hidden
+          "
+        >
 
           <thead>
 
@@ -188,7 +257,7 @@ const StudentMarksReportPage = () => {
 
           <tbody>
 
-            {marks.map((mark) => (
+            {marks.map(mark => (
 
               <tr
                 key={mark.id}
@@ -209,10 +278,17 @@ const StudentMarksReportPage = () => {
 
                 <td className="p-3">
 
-                  <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-
+                  <span
+                    className="
+                      px-3
+                      py-1
+                      rounded-full
+                      bg-green-100
+                      text-green-700
+                      text-sm
+                    "
+                  >
                     {mark.grade}
-
                   </span>
 
                 </td>

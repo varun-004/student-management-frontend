@@ -160,7 +160,7 @@ const Sidebar = () => {
 
             <li>
               <Link
-                to="/attendance/history"
+                to="/attendance/report"
                 className="block px-3 py-2 rounded-lg hover:bg-gray-800"
               >
                 My Attendance
