@@ -18,17 +18,12 @@ const Sidebar = () => {
       {/* LOGO */}
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold">
-          SMS
-        </h1>
+        <h1 className="text-2xl font-bold">SMS</h1>
 
-        <p className="text-gray-400 text-sm">
-          Student Management
-        </p>
+        <p className="text-gray-400 text-sm">Student Management</p>
       </div>
 
       <ul className="space-y-2">
-
         {/* DASHBOARD */}
 
         <li>
@@ -137,6 +132,21 @@ const Sidebar = () => {
                 Student Risk Analytics
               </Link>
             </li>
+
+            <li>
+              <Link
+                to="/admin/teachers"
+                className="
+      block
+      px-3
+      py-2
+      rounded-lg
+      hover:bg-gray-800
+    "
+              >
+                Teachers
+              </Link>
+            </li>
           </>
         )}
 
@@ -167,8 +177,53 @@ const Sidebar = () => {
             </li>
           </>
         )}
-
       </ul>
+
+      {/* TEACHER MENU */}
+
+      {user?.role === "TEACHER" && (
+        <>
+          <div className="mt-6 mb-2 text-xs uppercase text-gray-400 font-semibold">
+            Teaching
+          </div>
+
+          <li>
+            <Link
+              to="/teacher/dashboard"
+              className="block px-3 py-2 rounded-lg hover:bg-gray-800"
+            >
+              Dashboard
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/teacher/courses"
+              className="block px-3 py-2 rounded-lg hover:bg-gray-800"
+            >
+              My Courses
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/attendance/mark"
+              className="block px-3 py-2 rounded-lg hover:bg-gray-800"
+            >
+              Mark Attendance
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/marks/entry"
+              className="block px-3 py-2 rounded-lg hover:bg-gray-800"
+            >
+              Enter Marks
+            </Link>
+          </li>
+        </>
+      )}
     </div>
   );
 };

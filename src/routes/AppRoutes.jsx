@@ -26,6 +26,19 @@ import TopPerformersPage from "../pages/marks/TopPerformersPage";
 
 import StudentRiskPage from "../pages/analytics/StudentRiskPage";
 
+import TeacherDashboard from "../pages/teacher/TeacherDashboard";
+import TeacherAnalytics from "../pages/teacher/TeacherAnalytics";
+import TeacherCourses from "../pages/teacher/TeacherCourses";
+import TeacherAttendance from "../pages/teacher/TeacherAttendance";
+import TeacherMarks from "../pages/teacher/TeacherMarks";
+import TeacherCourseDetails from "../pages/teacher/TeacherCourseDetails";
+import TeachersPage from "../pages/admin/TeachersPage";
+
+import AddTeacherPage from "../pages/admin/AddTeacherPage";
+import EditTeacherPage
+from "../pages/admin/EditTeacherPage";
+
+
 const AppRoutes = () => {
   return (
     <BrowserRouter>
@@ -164,6 +177,129 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/teacher/dashboard"
+          element={
+            <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={["TEACHER"]}>
+                <DashboardLayout>
+                  <TeacherDashboard />
+                </DashboardLayout>
+              </RoleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/courses"
+          element={
+            <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={["TEACHER"]}>
+                <DashboardLayout>
+                  <TeacherCourses />
+                </DashboardLayout>
+              </RoleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/course/:courseId/attendance"
+          element={
+            <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={["TEACHER"]}>
+                <DashboardLayout>
+                  <TeacherAttendance />
+                </DashboardLayout>
+              </RoleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/course/:courseId/marks"
+          element={
+            <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={["TEACHER"]}>
+                <DashboardLayout>
+                  <TeacherMarks />
+                </DashboardLayout>
+              </RoleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/course/:courseId/analytics"
+          element={
+            <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={["TEACHER"]}>
+                <DashboardLayout>
+                  <TeacherAnalytics />
+                </DashboardLayout>
+              </RoleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
+
+       <Route
+  path="/teacher/course/:courseId"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute allowedRoles={["TEACHER"]}>
+        <DashboardLayout>
+          <TeacherCourseDetails />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/teachers"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute
+        allowedRoles={["ADMIN"]}
+      >
+        <DashboardLayout>
+          <TeachersPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/teachers/add"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute
+        allowedRoles={["ADMIN"]}
+      >
+        <DashboardLayout>
+          <AddTeacherPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/teachers/edit/:id"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute
+        allowedRoles={["ADMIN"]}
+      >
+        <DashboardLayout>
+          <EditTeacherPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
         {/* ERROR ROUTES */}
 
         <Route path="/unauthorized" element={<Unauthorized />} />

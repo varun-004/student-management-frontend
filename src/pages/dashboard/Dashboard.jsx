@@ -228,8 +228,8 @@ const Dashboard = () => {
             </p>
           )}
         </div>
-
-        {/* <TopCoursesChart
+{/* 
+        <TopCoursesChart
   courses={
     dashboardData?.topCourses || []
   }
