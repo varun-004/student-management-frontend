@@ -10,6 +10,8 @@ import {
 
 import EnrollStudentModal from "../../components/courses/EnrollStudentsModal";
 
+import toast from "react-hot-toast";
+
 const CourseDetailsPage = () => {
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
 
@@ -135,11 +137,20 @@ const CourseDetailsPage = () => {
         studentId
       );
 
+      toast.success(
+      "Student enrolled successfully"
+    );
+
       await fetchCourse();
 
       setIsEnrollModalOpen(false);
     } catch (err) {
       console.error(err);
+
+       toast.error(
+      err?.response?.data?.message ||
+      "Student already enrolled"
+    );
     } finally {
       setEnrollLoading(false);
     }

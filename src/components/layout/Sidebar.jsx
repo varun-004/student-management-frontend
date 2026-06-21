@@ -186,16 +186,6 @@ const Sidebar = () => {
           <div className="mt-6 mb-2 text-xs uppercase text-gray-400 font-semibold">
             Teaching
           </div>
-
-          <li>
-            <Link
-              to="/teacher/dashboard"
-              className="block px-3 py-2 rounded-lg hover:bg-gray-800"
-            >
-              Dashboard
-            </Link>
-          </li>
-
           <li>
             <Link
               to="/teacher/courses"

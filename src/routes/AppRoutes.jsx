@@ -26,7 +26,6 @@ import TopPerformersPage from "../pages/marks/TopPerformersPage";
 
 import StudentRiskPage from "../pages/analytics/StudentRiskPage";
 
-import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 import TeacherAnalytics from "../pages/teacher/TeacherAnalytics";
 import TeacherCourses from "../pages/teacher/TeacherCourses";
 import TeacherAttendance from "../pages/teacher/TeacherAttendance";
@@ -174,19 +173,6 @@ const AppRoutes = () => {
               <DashboardLayout>
                 <StudentRiskPage />
               </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/teacher/dashboard"
-          element={
-            <ProtectedRoute>
-              <RoleProtectedRoute allowedRoles={["TEACHER"]}>
-                <DashboardLayout>
-                  <TeacherDashboard />
-                </DashboardLayout>
-              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
