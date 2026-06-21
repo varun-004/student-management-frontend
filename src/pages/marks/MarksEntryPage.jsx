@@ -2,31 +2,23 @@ import { useEffect, useState } from "react";
 
 import { addMarks } from "../../services/marksService";
 
-import {
-  getAllCourses,
-  getCourseById,
-} from "../../services/courseService";
+import { getAllCourses, getCourseById } from "../../services/courseService";
 
 import toast from "react-hot-toast";
 
 const MarksEntryPage = () => {
+  const [formData, setFormData] = useState({
+    subject: "",
+    score: "",
+    studentId: "",
+    courseId: "",
+  });
 
-  const [formData, setFormData] =
-    useState({
-      subject: "",
-      score: "",
-      studentId: "",
-      courseId: "",
-    });
+  const [courses, setCourses] = useState([]);
 
-  const [courses, setCourses] =
-    useState([]);
+  const [students, setStudents] = useState([]);
 
-  const [students, setStudents] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
   /*
   |--------------------------------------------------------------------------
@@ -35,27 +27,17 @@ const MarksEntryPage = () => {
   */
 
   useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const data = await getAllCourses();
 
-    const loadCourses =
-      async () => {
-
-        try {
-
-          const data =
-            await getAllCourses();
-
-          setCourses(
-            data.content || []
-          );
-
-        } catch (err) {
-
-          console.error(err);
-        }
-      };
+        setCourses(data.content || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
     loadCourses();
-
   }, []);
 
   /*
@@ -65,11 +47,9 @@ const MarksEntryPage = () => {
   */
 
   const handleChange = (e) => {
-
     setFormData({
       ...formData,
-      [e.target.name]:
-        e.target.value,
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -79,34 +59,23 @@ const MarksEntryPage = () => {
   |--------------------------------------------------------------------------
   */
 
-  const handleCourseChange =
-    async (e) => {
+  const handleCourseChange = async (e) => {
+    const courseId = e.target.value;
 
-      const courseId =
-        e.target.value;
+    setFormData({
+      ...formData,
+      courseId,
+      studentId: "",
+    });
 
-      setFormData({
-        ...formData,
-        courseId,
-        studentId: "",
-      });
+    try {
+      const course = await getCourseById(courseId);
 
-      try {
-
-        const course =
-          await getCourseById(
-            courseId
-          );
-
-        setStudents(
-          course.students || []
-        );
-
-      } catch (err) {
-
-        console.error(err);
-      }
-    };
+      setStudents(course.students || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   /*
   |--------------------------------------------------------------------------
@@ -115,37 +84,22 @@ const MarksEntryPage = () => {
   */
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     try {
-
       setLoading(true);
 
       await addMarks({
+        subject: formData.subject,
 
-        subject:
-          formData.subject,
+        score: Number(formData.score),
 
-        score:
-          Number(
-            formData.score
-          ),
+        studentId: Number(formData.studentId),
 
-        studentId:
-          Number(
-            formData.studentId
-          ),
-
-        courseId:
-          Number(
-            formData.courseId
-          ),
+        courseId: Number(formData.courseId),
       });
 
-      toast.success(
-        "Marks added successfully"
-      );
+      toast.success("Marks added successfully");
 
       setFormData({
         subject: "",
@@ -155,94 +109,51 @@ const MarksEntryPage = () => {
       });
 
       setStudents([]);
-
     } catch (err) {
-
       console.error(err);
 
-      toast.error(
-        "Failed to add marks"
-      );
-
+      toast.error(err?.response?.data?.message || "Marks already exist");
     } finally {
-
       setLoading(false);
     }
   };
 
   return (
     <div className="p-6 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-6">Marks Entry</h1>
 
-      <h1 className="text-3xl font-bold mb-6">
-        Marks Entry
-      </h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
-
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* COURSE */}
 
         <select
           value={formData.courseId}
-          onChange={
-            handleCourseChange
-          }
+          onChange={handleCourseChange}
           className="w-full border rounded-lg p-3"
         >
+          <option value="">Select Course</option>
 
-          <option value="">
-            Select Course
-          </option>
-
-          {courses.map(
-            (course) => (
-
-              <option
-                key={course.id}
-                value={course.id}
-              >
-
-                {course.courseName}
-
-              </option>
-            )
-          )}
-
+          {courses.map((course) => (
+            <option key={course.id} value={course.id}>
+              {course.courseName}
+            </option>
+          ))}
         </select>
 
         {/* STUDENT */}
 
         <select
           name="studentId"
-          value={
-            formData.studentId
-          }
-          onChange={
-            handleChange
-          }
+          value={formData.studentId}
+          onChange={handleChange}
           className="w-full border rounded-lg p-3"
         >
+          <option value="">Select Student</option>
 
-          <option value="">
-            Select Student
-          </option>
-
-          {students.map(
-            (student) => (
-
-              <option
-                key={student.id}
-                value={student.id}
-              >
-
-                {student.name}
-
-              </option>
-            )
-          )}
-
+          {students.map((student) => (
+            <option key={student.id} value={student.id}>
+              {student.name}
+            </option>
+          ))}
         </select>
 
         {/* SUBJECT */}
@@ -252,9 +163,7 @@ const MarksEntryPage = () => {
           name="subject"
           placeholder="Subject"
           value={formData.subject}
-          onChange={
-            handleChange
-          }
+          onChange={handleChange}
           className="w-full border rounded-lg p-3"
         />
 
@@ -265,9 +174,7 @@ const MarksEntryPage = () => {
           name="score"
           placeholder="Score"
           value={formData.score}
-          onChange={
-            handleChange
-          }
+          onChange={handleChange}
           className="w-full border rounded-lg p-3"
         />
 
@@ -276,15 +183,9 @@ const MarksEntryPage = () => {
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg"
         >
-
-          {loading
-            ? "Saving..."
-            : "Save Marks"}
-
+          {loading ? "Saving..." : "Save Marks"}
         </button>
-
       </form>
-
     </div>
   );
 };

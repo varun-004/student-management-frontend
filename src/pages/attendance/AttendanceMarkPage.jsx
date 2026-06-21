@@ -56,10 +56,12 @@ const AttendanceMarkPage = () => {
     };
 
   const handleAttendance =
-    async (
-      studentId,
-      present
-    ) => {
+  async (
+    studentId,
+    present
+  ) => {
+
+    try {
 
       await markAttendance({
 
@@ -69,12 +71,26 @@ const AttendanceMarkPage = () => {
           selectedCourse,
 
         present,
+
       });
 
       toast.success(
         "Attendance Saved"
       );
-    };
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+
+        error?.response?.data?.message ||
+
+        "Attendance already marked"
+
+      );
+    }
+};
 
   return (
     <div className="p-6">
