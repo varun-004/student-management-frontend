@@ -30,6 +30,7 @@ import TeacherAnalytics from "../pages/teacher/TeacherAnalytics";
 import TeacherCourses from "../pages/teacher/TeacherCourses";
 import TeacherAttendance from "../pages/teacher/TeacherAttendance";
 import TeacherMarks from "../pages/teacher/TeacherMarks";
+import TeacherMarksHistory from "../pages/teacher/TeacherMarksHistory";
 import TeacherCourseDetails from "../pages/teacher/TeacherCourseDetails";
 import TeachersPage from "../pages/admin/TeachersPage";
 
@@ -281,6 +282,21 @@ const AppRoutes = () => {
       >
         <DashboardLayout>
           <EditTeacherPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/teacher/course/:courseId/marks-history"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute
+        allowedRoles={["TEACHER"]}
+      >
+        <DashboardLayout>
+          <TeacherMarksHistory />
         </DashboardLayout>
       </RoleProtectedRoute>
     </ProtectedRoute>

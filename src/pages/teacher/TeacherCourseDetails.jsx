@@ -160,6 +160,16 @@ function TeacherCourseDetails() {
   Analytics
 </button>
 
+<button
+  onClick={() =>
+    navigate(
+      `/teacher/course/${courseId}/marks-history`
+    )
+  }
+>
+  Marks History
+</button>
+
     </div>
   );
 }

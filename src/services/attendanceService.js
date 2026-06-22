@@ -63,4 +63,13 @@ export const getAttendancePercentage =
     return response.data;
   };
 
-  
+  export const getCourseWiseAttendance =
+  async (studentId) => {
+
+    const response =
+      await api.get(
+        `/api/attendance/student/${studentId}/course-wise`
+      );
+
+    return response.data;
+};

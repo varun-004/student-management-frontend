@@ -66,7 +66,7 @@ function TeacherMarks() {
 
     fetchStudents();
 
-  }, [courseId]);
+}, [loadStudents]);
 
   const handleScoreChange =
     (studentId, value) => {
@@ -80,7 +80,7 @@ function TeacherMarks() {
     };
 
   const handleSaveMarks =
-    async () => {
+    async () => { 
 
       try {
 
@@ -279,6 +279,7 @@ function TeacherMarks() {
             />
 
           </div>
+          
 
         ))}
 

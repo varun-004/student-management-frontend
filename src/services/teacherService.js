@@ -73,3 +73,39 @@ export const getCourseAnalytics =
 
     return response.data;
 };
+
+export const updateMarks = async (
+  marksId,
+  data
+) => {
+
+  const response =
+    await api.put(
+      `/api/marks/${marksId}`,
+      data
+    );
+
+  return response.data;
+};
+
+export const getMarksByCourse =
+  async (courseId) => {
+
+    const response =
+      await api.get(
+        `/api/marks/course/${courseId}`
+      );
+
+    return response.data;
+};
+
+export const deleteMarks =
+  async (marksId) => {
+
+    await api.delete(
+      `/api/marks/${marksId}`
+    );
+};
+
+
+
