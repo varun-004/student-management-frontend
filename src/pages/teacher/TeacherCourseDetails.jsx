@@ -170,6 +170,24 @@ function TeacherCourseDetails() {
   Marks History
 </button>
 
+<button
+  onClick={() =>
+    navigate(
+      `/teacher/course/${courseId}/attendance-history`
+    )
+  }
+  className="
+    bg-yellow-500
+    hover:bg-yellow-600
+    text-white
+    px-5
+    py-2
+    rounded-lg
+  "
+>
+  Attendance History
+</button>
+
     </div>
   );
 }

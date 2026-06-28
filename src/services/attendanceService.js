@@ -73,3 +73,27 @@ export const getAttendancePercentage =
 
     return response.data;
 };
+
+
+/*
+|--------------------------------------------------------------------------
+| EXPORT ATTENDANCE CSV
+|--------------------------------------------------------------------------
+*/
+
+export const exportAttendanceCsv =
+  async (courseId) => {
+
+    const response =
+      await api.get(
+
+        `/api/attendance/course/${courseId}/export`,
+
+        {
+          responseType: "blob"
+        }
+
+      );
+
+    return response.data;
+};

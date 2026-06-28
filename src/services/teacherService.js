@@ -107,5 +107,31 @@ export const deleteMarks =
     );
 };
 
+export const getTeacherDashboard =
+  async (teacherId) => {
+
+    const response =
+      await api.get(
+        `/api/teachers/${teacherId}/dashboard`
+      );
+
+    return response.data;
+};
 
 
+export const exportAttendanceCsv =
+  async (courseId) => {
+
+    const response =
+      await api.get(
+
+        `/api/attendance/course/${courseId}/export`,
+
+        {
+          responseType: "blob"
+        }
+
+      );
+
+    return response.data;
+};
