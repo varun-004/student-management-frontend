@@ -1,60 +1,39 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 import { getAllCourses } from "../../services/courseService";
-
-import {
-  getAttendanceByCourse,
-  exportAttendanceCsv
-} from "../../services/attendanceService";
+import { getAttendanceByCourse, exportAttendanceCsv } from "../../services/attendanceService";
+import Table from "../../components/common/Table";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader, Select } from "../../components/ui";
 
 const AttendanceHistoryPage = () => {
   const [courses, setCourses] = useState([]);
-
   const [attendance, setAttendance] = useState([]);
-
   const [selectedCourse, setSelectedCourse] = useState("");
-
   const [searchTerm, setSearchTerm] = useState("");
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD COURSES
-  |--------------------------------------------------------------------------
-  */
 
   const handleExport = async () => {
     if (!selectedCourse) {
-      alert("Please select a course first.");
-
+      toast.error("Please select a course first.");
       return;
     }
 
     try {
       const file = await exportAttendanceCsv(selectedCourse);
-
       const url = window.URL.createObjectURL(file);
-
       const link = document.createElement("a");
-
       link.href = url;
-
       link.download = "attendance.csv";
-
       document.body.appendChild(link);
-
       link.click();
-
       link.remove();
-
       window.URL.revokeObjectURL(url);
+      toast.success("CSV exported");
     } catch (error) {
       console.error(error);
-
-      alert("Failed to export CSV");
+      toast.error("Failed to export CSV");
     }
   };
 
@@ -62,7 +41,6 @@ const AttendanceHistoryPage = () => {
     const loadCourses = async () => {
       try {
         const data = await getAllCourses();
-
         setCourses(data.content || []);
       } catch (err) {
         console.error(err);
@@ -72,190 +50,96 @@ const AttendanceHistoryPage = () => {
     loadCourses();
   }, []);
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD ATTENDANCE
-  |--------------------------------------------------------------------------
-  */
-
   const handleCourseChange = async (courseId) => {
     try {
       setLoading(true);
-
       setSelectedCourse(courseId);
 
       if (!courseId) {
         setAttendance([]);
-
         return;
       }
 
       const data = await getAttendanceByCourse(courseId);
-
       setAttendance(data);
-
       setError("");
     } catch (err) {
       console.error(err);
-
       setError("Failed to load attendance records");
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | SEARCH FILTER
-  |--------------------------------------------------------------------------
-  */
-
   const filteredAttendance = attendance.filter((record) =>
     record.studentName?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
-    <div className="p-6">
-      <h1
-        className="
-          text-3xl
-          font-bold
-          mb-6
-        "
-      >
-        Attendance History
-      </h1>
+    <div className="space-y-6">
+      <PageHeader title="Attendance History" description="Review attendance records and export them for reporting." />
 
-      {/* FILTERS */}
+      <Card>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <CardTitle>Filters</CardTitle>
+            <p className="text-sm text-slate-500">Select a course and search by student name.</p>
+          </div>
+          <Button variant="outline" onClick={handleExport} disabled={!selectedCourse}>
+            Export CSV
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+            <Select value={selectedCourse} onChange={(e) => handleCourseChange(e.target.value)}>
+              <option value="">Select Course</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.courseName}
+                </option>
+              ))}
+            </Select>
+            <Input type="text" placeholder="Search Student..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div
-        className="
-          flex
-          gap-4
-          mb-6
-        "
-      >
-        <select
-          value={selectedCourse}
-          onChange={(e) => handleCourseChange(e.target.value)}
-          className="
-            border
-            px-4
-            py-2
-            rounded-lg
-          "
-        >
-          <option value="">Select Course</option>
-
-          {courses.map((course) => (
-            <option key={course.id} value={course.id}>
-              {course.courseName}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="text"
-          placeholder="Search Student..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="
-            border
-            px-4
-            py-2
-            rounded-lg
-            flex-1
-          "
-        />
-      </div>
-
-      {/* LOADING */}
-
-      {loading && <div className="mb-4">Loading attendance...</div>}
-
-      {/* ERROR */}
-
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-
-      {/* EMPTY */}
+      {loading && <div className="text-sm text-slate-500">Loading attendance...</div>}
+      {error && <div className="text-sm text-red-600">{error}</div>}
 
       {!loading && filteredAttendance.length === 0 ? (
-        <div
-          className="
-              bg-white
-              rounded-xl
-              shadow
-              p-8
-              text-center
-            "
-        >
-          No attendance records found.
-        </div>
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-slate-500">No attendance records found.</CardContent>
+        </Card>
       ) : (
-        <div className="overflow-x-auto">
-          <button
-            onClick={handleExport}
-            disabled={!selectedCourse}
-            className="
-    bg-green-600
-    hover:bg-green-700
-    text-white
-    px-5
-    py-2
-    rounded-lg
-  "
-          >
-            Export CSV
-          </button>
-
-          <table
-            className="
-                w-full
-                border
-                rounded-lg
-              "
-          >
-            <thead>
-              <tr
-                className="
-                    bg-gray-100
-                  "
-              >
-                <th className="p-3">Student</th>
-
-                <th className="p-3">Course</th>
-
-                <th className="p-3">Date</th>
-
-                <th className="p-3">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredAttendance.map((record) => (
-                <tr key={record.id} className="border-t">
-                  <td className="p-3">{record.studentName}</td>
-
-                  <td className="p-3">{record.courseName}</td>
-
-                  <td className="p-3">{record.attendanceDate}</td>
-
-                  <td className="p-3">
-                    <span
-                      className={
-                        record.present
-                          ? "bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
-                          : "bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm"
-                      }
-                    >
-                      {record.present ? "Present" : "Absent"}
-                    </span>
-                  </td>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Course</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredAttendance.map((record) => (
+                  <tr key={record.id} className="hover:bg-slate-50/70">
+                    <td className="px-4 py-3 font-medium text-slate-900">{record.studentName}</td>
+                    <td className="px-4 py-3 text-slate-600">{record.courseName}</td>
+                    <td className="px-4 py-3 text-slate-600">{record.attendanceDate}</td>
+                    <td className="px-4 py-3">
+                      <span className={record.present ? "rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700" : "rounded-full bg-rose-100 px-3 py-1 text-sm font-medium text-rose-700"}>
+                        {record.present ? "Present" : "Absent"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

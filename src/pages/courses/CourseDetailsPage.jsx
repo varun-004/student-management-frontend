@@ -1,397 +1,181 @@
 import { useEffect, useState } from "react";
-
 import { useParams } from "react-router-dom";
-
-import {
-  getCourseById,
-  assignStudentToCourse,
-  removeStudentFromCourse,
-} from "../../services/courseService";
-
-import EnrollStudentModal from "../../components/courses/EnrollStudentsModal";
-
 import toast from "react-hot-toast";
+
+import { getCourseById, assignStudentToCourse, removeStudentFromCourse } from "../../services/courseService";
+import EnrollStudentModal from "../../components/courses/EnrollStudentsModal";
+import Table from "../../components/common/Table";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from "../../components/ui";
 
 const CourseDetailsPage = () => {
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
-
   const [enrollLoading, setEnrollLoading] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
-
   const { id } = useParams();
-
   const [course, setCourse] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD COURSE
-  |--------------------------------------------------------------------------
-  */
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removing, setRemoving] = useState(false);
 
   const fetchCourse = async (showLoader = true) => {
     try {
-      if (showLoader) {
-        setLoading(true);
-      }
-
+      if (showLoader) setLoading(true);
       setError("");
-
       const data = await getCourseById(id);
-
       setCourse(data);
     } catch (err) {
       setError(err?.message || "Failed to load course");
       setCourse(null);
     } finally {
-      if (showLoader) {
-        setLoading(false);
-      }
+      if (showLoader) setLoading(false);
     }
   };
 
   useEffect(() => {
-  const loadCourse = async () => {
-    try {
-      setLoading(true);
+    const loadCourse = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const data = await getCourseById(id);
+        setCourse(data);
+      } catch (err) {
+        setError(err?.message || "Failed to load course");
+        setCourse(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setError("");
-
-      const data = await getCourseById(id);
-
-      setCourse(data);
-    } catch (err) {
-      setError(
-        err?.message ||
-          "Failed to load course"
-      );
-
-      setCourse(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadCourse();
-}, [id]);
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
+    loadCourse();
+  }, [id]);
 
   if (loading) {
-    return (
-      <div className="p-6 text-lg">
-        Loading course...
-      </div>
-    );
+    return <div className="p-6 text-sm text-slate-500">Loading course...</div>;
   }
-
-  /*
-  |--------------------------------------------------------------------------
-  | ERROR
-  |--------------------------------------------------------------------------
-  */
 
   if (error) {
-    return (
-      <div className="p-6 text-red-500">
-        {error}
-      </div>
-    );
+    return <div className="p-6 text-sm text-red-600">{error}</div>;
   }
-
-  /*
-  |--------------------------------------------------------------------------
-  | NO COURSE
-  |--------------------------------------------------------------------------
-  */
 
   if (!course) {
-    return (
-      <div className="p-6">
-        Course not found
-      </div>
-    );
+    return <div className="p-6 text-sm text-slate-500">Course not found</div>;
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | ENROLL STUDENT
-  |--------------------------------------------------------------------------
-  */
-
-  const handleEnrollStudent = async (
-    studentId
-  ) => {
+  const handleEnrollStudent = async (studentId) => {
     try {
       setEnrollLoading(true);
-
-      await assignStudentToCourse(
-        id,
-        studentId
-      );
-
-      toast.success(
-      "Student enrolled successfully"
-    );
-
+      await assignStudentToCourse(id, studentId);
+      toast.success("Student enrolled successfully");
       await fetchCourse();
-
       setIsEnrollModalOpen(false);
     } catch (err) {
       console.error(err);
-
-       toast.error(
-      err?.response?.data?.message ||
-      "Student already enrolled"
-    );
+      toast.error(err?.response?.data?.message || "Student already enrolled");
     } finally {
       setEnrollLoading(false);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | REMOVE STUDENT
-  |--------------------------------------------------------------------------
-  */
-
-  const handleRemoveStudent = async (
-    studentId
-  ) => {
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to remove this student?"
-      );
-
-    if (!confirmed) return;
+  const handleRemoveStudent = async () => {
+    if (!removeTarget) return;
 
     try {
-      await removeStudentFromCourse(
-        id,
-        studentId
-      );
-
+      setRemoving(true);
+      await removeStudentFromCourse(id, removeTarget.id);
       await fetchCourse();
+      toast.success("Student removed from course");
     } catch (err) {
       console.error(err);
+      toast.error("Failed to remove student");
+    } finally {
+      setRemoving(false);
+      setRemoveTarget(null);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | SEARCH FILTER
-  |--------------------------------------------------------------------------
-  */
-
-  const filteredStudents =
-    course.students?.filter(
-      (student) =>
-        student.name
-          ?.toLowerCase()
-          .includes(
-            searchTerm.toLowerCase()
-          )
-    ) || [];
+  const filteredStudents = course.students?.filter((student) => student.name?.toLowerCase().includes(searchTerm.toLowerCase())) || [];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
+      <PageHeader title={course.courseName} description={course.description || "Course overview and enrolled students."} />
 
-      {/* COURSE INFO */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Course details</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm text-slate-600 md:grid-cols-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Course code</p>
+            <p className="mt-1 font-medium text-slate-900">{course.courseCode}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Credits</p>
+            <p className="mt-1 font-medium text-slate-900">{course.credits}</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Instructor</p>
+            <p className="mt-1 font-medium text-slate-900">{course.teacherName || "Unassigned"}</p>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white border rounded-xl p-6 shadow-sm">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle>Enrolled students</CardTitle>
+            <p className="text-sm text-slate-500">Manage the roster for this course.</p>
+          </div>
+          <Button onClick={() => setIsEnrollModalOpen(true)}>Enroll Student</Button>
+        </CardHeader>
+        <CardContent>
+          <Input type="text" placeholder="Search student..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="mb-4" />
 
-        <h1 className="text-3xl font-bold mb-4">
-          {course.courseName}
-        </h1>
-
-        <div className="space-y-2 text-gray-700">
-
-          <p>
-            <span className="font-semibold">
-              Course Code:
-            </span>{" "}
-            {course.courseCode}
-          </p>
-
-          <p>
-            <span className="font-semibold">
-              Credits:
-            </span>{" "}
-            {course.credits}
-          </p>
-
-          <p>
-            <span className="font-semibold">
-              Description:
-            </span>{" "}
-            {course.description || "N/A"}
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* STUDENTS */}
-
-      <div className="bg-white border rounded-xl p-6 shadow-sm mt-6">
-
-        <div className="flex items-center justify-between mb-5">
-
-          <h2 className="text-2xl font-bold">
-            Enrolled Students
-          </h2>
-
-          <button
-            onClick={() =>
-              setIsEnrollModalOpen(true)
-            }
-            className="
-              bg-blue-600
-              hover:bg-blue-700
-              text-white
-              px-4
-              py-2
-              rounded-lg
-            "
-          >
-            Enroll Student
-          </button>
-
-        </div>
-
-        {/* SEARCH */}
-
-        <input
-          type="text"
-          placeholder="Search student..."
-          value={searchTerm}
-          onChange={(e) =>
-            setSearchTerm(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            border
-            rounded-lg
-            px-4
-            py-2
-            mb-5
-          "
-        />
-
-        {/* EMPTY STATE */}
-
-        {filteredStudents.length === 0 ? (
-
-          <div
-            className="
-              bg-gray-50
-              rounded-lg
-              p-6
-              text-center
-            "
-          >
-            <p className="text-gray-500">
+          {filteredStudents.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
               No students found.
-            </p>
-          </div>
-
-        ) : (
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full border-collapse">
-
-              <thead>
-
-                <tr className="border-b bg-gray-50">
-
-                  <th className="text-left p-3">
-                    Name
-                  </th>
-
-                  <th className="text-left p-3">
-                    Email
-                  </th>
-
-                  <th className="text-left p-3">
-                    Actions
-                  </th>
-
+            </div>
+          ) : (
+            <Table>
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
-
               </thead>
-
-              <tbody>
-
-                {filteredStudents.map(
-                  (student) => (
-
-                    <tr
-                      key={student.id}
-                      className="border-b"
-                    >
-
-                      <td className="p-3">
-                        {student.name}
-                      </td>
-
-                      <td className="p-3">
-                        {student.email}
-                      </td>
-
-                      <td className="p-3">
-
-                        <button
-                          onClick={() =>
-                            handleRemoveStudent(
-                              student.id
-                            )
-                          }
-                          className="
-                            text-red-600
-                            hover:underline
-                          "
-                        >
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredStudents.map((student) => (
+                  <tr key={student.id} className="hover:bg-slate-50/70">
+                    <td className="px-4 py-3 font-medium text-slate-900">{student.name}</td>
+                    <td className="px-4 py-3 text-slate-600">{student.email}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        <Button variant="danger" size="sm" onClick={() => setRemoveTarget(student)}>
                           Remove
-                        </button>
-
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-            </table>
+      <EnrollStudentModal isOpen={isEnrollModalOpen} onClose={() => setIsEnrollModalOpen(false)} onEnroll={handleEnrollStudent} loading={enrollLoading} />
 
-          </div>
-
-        )}
-
-      </div>
-
-      {/* MODAL */}
-
-      <EnrollStudentModal
-        isOpen={isEnrollModalOpen}
-        onClose={() =>
-          setIsEnrollModalOpen(false)
-        }
-        onEnroll={handleEnrollStudent}
-        loading={enrollLoading}
+      <ConfirmModal
+        isOpen={Boolean(removeTarget)}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={handleRemoveStudent}
+        title="Remove student"
+        message={`Remove ${removeTarget?.name || "this student"} from the course roster?`}
+        confirmLabel="Remove"
+        loading={removing}
       />
-
     </div>
   );
 };

@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-
+import { NavLink } from "react-router-dom";
 function TeacherSidebar() {
     return (
         <div
@@ -14,33 +13,33 @@ function TeacherSidebar() {
 
             <ul>
                 <li>
-                    <Link to="/teacher/dashboard">
+                    <NavLink to="/teacher/dashboard">
                         Dashboard
-                    </Link>
+                    </NavLink>
                 </li>
 
                 <li>
-                    <Link to="/teacher/courses">
+                    <NavLink to="/teacher/courses">
                         My Courses
-                    </Link>
+                    </NavLink>
                 </li>
 
                 <li>
-                    <Link to="/teacher/attendance">
+                    <NavLink to="/teacher/attendance">
                         Attendance
-                    </Link>
+                    </NavLink>
                 </li>
 
                 <li>
-                    <Link to="/teacher/marks">
+                    <NavLink to="/teacher/marks">
                         Marks
-                    </Link>
+                    </NavLink>
                 </li>
 
                 <li>
-                    <Link to="/teacher/analytics">
+                    <NavLink to="/teacher/analytics">
                         Analytics
-                    </Link>
+                    </NavLink>
                 </li>
             </ul>
         </div>

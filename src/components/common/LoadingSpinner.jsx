@@ -1,11 +1,7 @@
-const LoadingSpinner = () => {
-  return (
-    <div className="flex justify-center items-center p-10">
-      <div className="text-lg font-semibold">
-        Loading...
-      </div>
-    </div>
-  );
+import { PageLoader } from "../ui/Spinner";
+
+const LoadingSpinner = ({ label = "Loading" }) => {
+  return <PageLoader label={label} />;
 };
 
 export default LoadingSpinner;

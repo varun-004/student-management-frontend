@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+
 
 const CourseCard = ({ course }) => {
   return (
@@ -28,7 +29,7 @@ const CourseCard = ({ course }) => {
 
       <div className="flex gap-4">
 
-        <Link
+        <NavLink
           to={`/courses/${course.id}`}
           className="
             text-blue-600
@@ -37,7 +38,7 @@ const CourseCard = ({ course }) => {
           "
         >
           View Details
-        </Link>
+        </NavLink>
 
       </div>
     </div>

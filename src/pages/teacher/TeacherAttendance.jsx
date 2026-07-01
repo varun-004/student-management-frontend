@@ -1,26 +1,18 @@
 import { useEffect, useState } from "react";
-
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
-import {
-  getCourseStudents,
-  markAttendance,
-} from "../../services/teacherService";
+import { getCourseStudents, markAttendance } from "../../services/teacherService";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from "../../components/ui";
 
 function TeacherAttendance() {
   const { courseId } = useParams();
 
   const [students, setStudents] = useState([]);
-
   const [attendanceData, setAttendanceData] = useState({});
-
   const [loading, setLoading] = useState(true);
-
   const [saving, setSaving] = useState(false);
-
-  const [attendanceDate, setAttendanceDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
     let active = true;
@@ -28,18 +20,12 @@ function TeacherAttendance() {
     const fetchStudents = async () => {
       try {
         const data = await getCourseStudents(courseId);
-
-        if (!active) {
-          return;
-        }
-
+        if (!active) return;
         setStudents(data);
       } catch (error) {
         console.error(error);
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     };
 
@@ -60,141 +46,63 @@ function TeacherAttendance() {
   const handleSaveAttendance = async () => {
     try {
       setSaving(true);
-
       for (const student of students) {
         await markAttendance({
           studentId: student.id,
-
           courseId: Number(courseId),
-
           attendanceDate,
-
           present: attendanceData[student.id] || false,
         });
       }
-
-      alert("Attendance saved successfully");
+      toast.success("Attendance saved successfully");
     } catch (error) {
       console.error(error);
-
-      alert(error?.response?.data?.message || "Failed to save attendance");
+      toast.error(error?.response?.data?.message || "Failed to save attendance");
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <h2>Loading Students...</h2>;
+    return <div className="p-6 text-sm text-slate-500">Loading students...</div>;
   }
 
   return (
-    <div className="p-6">
-      <div
-        className="
-          flex
-          justify-between
-          items-center
-          mb-6
-        "
-      >
-        <h1
-          className="
-            text-3xl
-            font-bold
-          "
-        >
-          Mark Attendance
-        </h1>
+    <div className="space-y-6">
+      <PageHeader title="Mark Attendance" description="Record attendance for the selected course and date." />
 
-        <div className="mt-4">
-          <label
-            className="
-      font-semibold
-      mr-3
-    "
-          >
-            Attendance Date
-          </label>
-
-          <input
-            type="date"
-            value={attendanceDate}
-            onChange={(e) => setAttendanceDate(e.target.value)}
-            className="
-      border
-      px-3
-      py-2
-      rounded-lg
-    "
-          />
-        </div>
-
-        <button
-          onClick={handleSaveAttendance}
-          disabled={saving}
-          className="
-            bg-green-600
-            hover:bg-green-700
-            text-white
-            px-5
-            py-2
-            rounded-lg
-          "
-        >
-          {saving ? "Saving..." : "Save Attendance"}
-        </button>
-      </div>
-
-      <div
-        className="
-          bg-white
-          rounded-xl
-          shadow
-        "
-      >
-        {students.map((student) => (
-          <div
-            key={student.id}
-            className="
-              flex
-              justify-between
-              items-center
-              border-b
-              p-4
-            "
-          >
-            <div>
-              <h3
-                className="
-                  font-semibold
-                "
-              >
-                {student.name}
-              </h3>
-
-              <p
-                className="
-                  text-gray-500
-                "
-              >
-                {student.email}
-              </p>
-            </div>
-
-            <input
-              type="checkbox"
-              checked={attendanceData[student.id] || false}
-              onChange={(e) =>
-                handleCheckboxChange(student.id, e.target.checked)
-              }
-              className="
-                w-5
-                h-5
-              "
-            />
+      <Card>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <CardTitle>Attendance list</CardTitle>
+            <p className="text-sm text-slate-500">Tick students who are present for the chosen date.</p>
           </div>
-        ))}
-      </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Input label="Attendance Date" type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)} />
+            <Button variant="outline" onClick={handleSaveAttendance} loading={saving}>
+              {saving ? "Saving..." : "Save Attendance"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-slate-100">
+            {students.map((student) => (
+              <div key={student.id} className="flex items-center justify-between gap-4 px-6 py-4">
+                <div>
+                  <h3 className="font-semibold text-slate-900">{student.name}</h3>
+                  <p className="text-sm text-slate-500">{student.email}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={attendanceData[student.id] || false}
+                  onChange={(e) => handleCheckboxChange(student.id, e.target.checked)}
+                  className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-600"
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
