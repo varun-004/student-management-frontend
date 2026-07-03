@@ -1,397 +1,284 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { BookOpen, GraduationCap, Search, UserPlus, Users2 } from "lucide-react";
 
 import {
   getCourseById,
   assignStudentToCourse,
   removeStudentFromCourse,
 } from "../../services/courseService";
-
 import EnrollStudentModal from "../../components/courses/EnrollStudentsModal";
-
-import toast from "react-hot-toast";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import Table from "../../components/common/Table";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Input,
+  PageHeader,
+  StatCard,
+  TableSkeleton,
+} from "../../components/ui";
 
 const CourseDetailsPage = () => {
+  useDocumentTitle("Course Details");
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
-
   const [enrollLoading, setEnrollLoading] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
-
   const { id } = useParams();
-
   const [course, setCourse] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD COURSE
-  |--------------------------------------------------------------------------
-  */
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removing, setRemoving] = useState(false);
 
   const fetchCourse = async (showLoader = true) => {
     try {
-      if (showLoader) {
-        setLoading(true);
-      }
-
+      if (showLoader) setLoading(true);
       setError("");
-
       const data = await getCourseById(id);
-
       setCourse(data);
     } catch (err) {
       setError(err?.message || "Failed to load course");
       setCourse(null);
     } finally {
-      if (showLoader) {
-        setLoading(false);
-      }
+      if (showLoader) setLoading(false);
     }
   };
 
   useEffect(() => {
-  const loadCourse = async () => {
-    try {
-      setLoading(true);
+    let isMounted = true;
 
-      setError("");
+    const loadCourse = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const data = await getCourseById(id);
+        if (isMounted) setCourse(data);
+      } catch (err) {
+        if (isMounted) {
+          setError(err?.message || "Failed to load course");
+          setCourse(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
 
-      const data = await getCourseById(id);
+    loadCourse();
 
-      setCourse(data);
-    } catch (err) {
-      setError(
-        err?.message ||
-          "Failed to load course"
-      );
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
-      setCourse(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredStudents = useMemo(
+    () =>
+      course?.students?.filter((student) =>
+        student.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ) || [],
+    [course?.students, searchTerm],
+  );
 
-  loadCourse();
-}, [id]);
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
-
-  if (loading) {
-    return (
-      <div className="p-6 text-lg">
-        Loading course...
-      </div>
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | ERROR
-  |--------------------------------------------------------------------------
-  */
-
-  if (error) {
-    return (
-      <div className="p-6 text-red-500">
-        {error}
-      </div>
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | NO COURSE
-  |--------------------------------------------------------------------------
-  */
-
-  if (!course) {
-    return (
-      <div className="p-6">
-        Course not found
-      </div>
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | ENROLL STUDENT
-  |--------------------------------------------------------------------------
-  */
-
-  const handleEnrollStudent = async (
-    studentId
-  ) => {
+  const handleEnrollStudent = async (studentId) => {
     try {
       setEnrollLoading(true);
-
-      await assignStudentToCourse(
-        id,
-        studentId
-      );
-
-      toast.success(
-      "Student enrolled successfully"
-    );
-
-      await fetchCourse();
-
+      await assignStudentToCourse(id, studentId);
+      notify.success("Student enrolled successfully");
+      await fetchCourse(false);
       setIsEnrollModalOpen(false);
     } catch (err) {
       console.error(err);
-
-       toast.error(
-      err?.response?.data?.message ||
-      "Student already enrolled"
-    );
+      notify.error(err?.response?.data?.message || "Student already enrolled");
     } finally {
       setEnrollLoading(false);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | REMOVE STUDENT
-  |--------------------------------------------------------------------------
-  */
-
-  const handleRemoveStudent = async (
-    studentId
-  ) => {
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to remove this student?"
-      );
-
-    if (!confirmed) return;
+  const handleRemoveStudent = async () => {
+    if (!removeTarget) return;
 
     try {
-      await removeStudentFromCourse(
-        id,
-        studentId
-      );
-
-      await fetchCourse();
+      setRemoving(true);
+      await removeStudentFromCourse(id, removeTarget.id);
+      await fetchCourse(false);
+      notify.success("Student removed from course");
     } catch (err) {
       console.error(err);
+      notify.error("Failed to remove student");
+    } finally {
+      setRemoving(false);
+      setRemoveTarget(null);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | SEARCH FILTER
-  |--------------------------------------------------------------------------
-  */
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-28 animate-pulse rounded-2xl bg-slate-200/80" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 animate-pulse rounded-2xl bg-slate-200/80" />
+          ))}
+        </div>
+        <TableSkeleton rows={5} cols={3} />
+      </div>
+    );
+  }
 
-  const filteredStudents =
-    course.students?.filter(
-      (student) =>
-        student.name
-          ?.toLowerCase()
-          .includes(
-            searchTerm.toLowerCase()
-          )
-    ) || [];
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <EmptyState
+        icon={BookOpen}
+        title="Course not found"
+        description="The course you're looking for doesn't exist or was removed."
+      />
+    );
+  }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Course details"
+        title={course.courseName}
+        description={course.description || "Course overview and enrolled students."}
+      >
+        <Button leftIcon={UserPlus} onClick={() => setIsEnrollModalOpen(true)}>
+          Enroll Student
+        </Button>
+      </PageHeader>
 
-      {/* COURSE INFO */}
-
-      <div className="bg-white border rounded-xl p-6 shadow-sm">
-
-        <h1 className="text-3xl font-bold mb-4">
-          {course.courseName}
-        </h1>
-
-        <div className="space-y-2 text-gray-700">
-
-          <p>
-            <span className="font-semibold">
-              Course Code:
-            </span>{" "}
-            {course.courseCode}
-          </p>
-
-          <p>
-            <span className="font-semibold">
-              Credits:
-            </span>{" "}
-            {course.credits}
-          </p>
-
-          <p>
-            <span className="font-semibold">
-              Description:
-            </span>{" "}
-            {course.description || "N/A"}
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* STUDENTS */}
-
-      <div className="bg-white border rounded-xl p-6 shadow-sm mt-6">
-
-        <div className="flex items-center justify-between mb-5">
-
-          <h2 className="text-2xl font-bold">
-            Enrolled Students
-          </h2>
-
-          <button
-            onClick={() =>
-              setIsEnrollModalOpen(true)
-            }
-            className="
-              bg-blue-600
-              hover:bg-blue-700
-              text-white
-              px-4
-              py-2
-              rounded-lg
-            "
-          >
-            Enroll Student
-          </button>
-
-        </div>
-
-        {/* SEARCH */}
-
-        <input
-          type="text"
-          placeholder="Search student..."
-          value={searchTerm}
-          onChange={(e) =>
-            setSearchTerm(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            border
-            rounded-lg
-            px-4
-            py-2
-            mb-5
-          "
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Course Code"
+          value={course.courseCode}
+          icon={BookOpen}
+          description="Unique identifier"
         />
-
-        {/* EMPTY STATE */}
-
-        {filteredStudents.length === 0 ? (
-
-          <div
-            className="
-              bg-gray-50
-              rounded-lg
-              p-6
-              text-center
-            "
-          >
-            <p className="text-gray-500">
-              No students found.
-            </p>
-          </div>
-
-        ) : (
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full border-collapse">
-
-              <thead>
-
-                <tr className="border-b bg-gray-50">
-
-                  <th className="text-left p-3">
-                    Name
-                  </th>
-
-                  <th className="text-left p-3">
-                    Email
-                  </th>
-
-                  <th className="text-left p-3">
-                    Actions
-                  </th>
-
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {filteredStudents.map(
-                  (student) => (
-
-                    <tr
-                      key={student.id}
-                      className="border-b"
-                    >
-
-                      <td className="p-3">
-                        {student.name}
-                      </td>
-
-                      <td className="p-3">
-                        {student.email}
-                      </td>
-
-                      <td className="p-3">
-
-                        <button
-                          onClick={() =>
-                            handleRemoveStudent(
-                              student.id
-                            )
-                          }
-                          className="
-                            text-red-600
-                            hover:underline
-                          "
-                        >
-                          Remove
-                        </button>
-
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-        )}
-
+        <StatCard
+          label="Credits"
+          value={course.credits}
+          icon={GraduationCap}
+          description="Academic credit hours"
+        />
+        <StatCard
+          label="Instructor"
+          value={course.teacherName || "Unassigned"}
+          icon={Users2}
+          description="Assigned teacher"
+        />
+        <StatCard
+          label="Enrolled"
+          value={course.students?.length ?? 0}
+          icon={Users2}
+          description="Students in this course"
+          trend="up"
+          trendLabel="Active"
+        />
       </div>
 
-      {/* MODAL */}
+      <Card>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle>Enrolled students</CardTitle>
+            <CardDescription>Manage the roster for this course.</CardDescription>
+          </div>
+          <div className="w-full max-w-xs">
+            <Input
+              type="text"
+              placeholder="Search student..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={Search}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {filteredStudents.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                icon={Users2}
+                title="No students found"
+                description={
+                  searchTerm
+                    ? "No students match your search."
+                    : "Enroll students to build this course roster."
+                }
+                action={
+                  !searchTerm ? (
+                    <Button leftIcon={UserPlus} onClick={() => setIsEnrollModalOpen(true)}>
+                      Enroll Student
+                    </Button>
+                  ) : null
+                }
+              />
+            </div>
+          ) : (
+            <Table>
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredStudents.map((student) => (
+                  <tr key={student.id} className="hover:bg-slate-50/70">
+                    <td className="px-4 py-3 font-medium text-slate-900">{student.name}</td>
+                    <td className="px-4 py-3 text-slate-600">{student.email}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant="success" dot>
+                        Enrolled
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end">
+                        <Button variant="danger" size="sm" onClick={() => setRemoveTarget(student)}>
+                          Remove
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <EnrollStudentModal
         isOpen={isEnrollModalOpen}
-        onClose={() =>
-          setIsEnrollModalOpen(false)
-        }
+        onClose={() => setIsEnrollModalOpen(false)}
         onEnroll={handleEnrollStudent}
         loading={enrollLoading}
       />
 
+      <ConfirmModal
+        isOpen={Boolean(removeTarget)}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={handleRemoveStudent}
+        title="Remove student"
+        message={`Remove ${removeTarget?.name || "this student"} from the course roster?`}
+        confirmLabel="Remove"
+        loading={removing}
+      />
     </div>
   );
 };

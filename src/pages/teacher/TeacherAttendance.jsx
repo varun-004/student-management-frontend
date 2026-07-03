@@ -1,23 +1,34 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { CheckCircle2, Save, Users2, XCircle } from "lucide-react";
 
+import { getCourseStudents, markAttendance } from "../../services/teacherService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import {
-  getCourseStudents,
-  markAttendance,
-} from "../../services/teacherService";
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Input,
+  ListSkeleton,
+  PageHeader,
+  PageHeaderSkeleton,
+  StatCard,
+  StatCardSkeleton,
+} from "../../components/ui";
 
 function TeacherAttendance() {
+  useDocumentTitle("Mark Attendance");
   const { courseId } = useParams();
-
   const [students, setStudents] = useState([]);
-
   const [attendanceData, setAttendanceData] = useState({});
-
   const [loading, setLoading] = useState(true);
-
   const [saving, setSaving] = useState(false);
-
   const [attendanceDate, setAttendanceDate] = useState(
     new Date().toISOString().split("T")[0],
   );
@@ -28,18 +39,12 @@ function TeacherAttendance() {
     const fetchStudents = async () => {
       try {
         const data = await getCourseStudents(courseId);
-
-        if (!active) {
-          return;
-        }
-
+        if (!active) return;
         setStudents(data);
       } catch (error) {
         console.error(error);
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     };
 
@@ -49,6 +54,11 @@ function TeacherAttendance() {
       active = false;
     };
   }, [courseId]);
+
+  const presentCount = useMemo(
+    () => Object.values(attendanceData).filter(Boolean).length,
+    [attendanceData],
+  );
 
   const handleCheckboxChange = (studentId, checked) => {
     setAttendanceData((prev) => ({
@@ -60,141 +70,152 @@ function TeacherAttendance() {
   const handleSaveAttendance = async () => {
     try {
       setSaving(true);
-
       for (const student of students) {
         await markAttendance({
           studentId: student.id,
-
           courseId: Number(courseId),
-
           attendanceDate,
-
           present: attendanceData[student.id] || false,
         });
       }
-
-      alert("Attendance saved successfully");
+      notify.success("Attendance saved successfully");
     } catch (error) {
       console.error(error);
-
-      alert(error?.response?.data?.message || "Failed to save attendance");
+      notify.error(error?.response?.data?.message || "Failed to save attendance");
     } finally {
       setSaving(false);
     }
   };
 
+  const markAll = (present) => {
+    const next = {};
+    students.forEach((s) => {
+      next[s.id] = present;
+    });
+    setAttendanceData(next);
+  };
+
   if (loading) {
-    return <h2>Loading Students...</h2>;
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-4 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+        <ListSkeleton rows={6} />
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
-      <div
-        className="
-          flex
-          justify-between
-          items-center
-          mb-6
-        "
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Attendance"
+        title="Mark Attendance"
+        description="Record attendance for the selected course and date."
       >
-        <h1
-          className="
-            text-3xl
-            font-bold
-          "
-        >
-          Mark Attendance
-        </h1>
+        <Button leftIcon={Save} onClick={handleSaveAttendance} loading={saving}>
+          Save Attendance
+        </Button>
+      </PageHeader>
 
-        <div className="mt-4">
-          <label
-            className="
-      font-semibold
-      mr-3
-    "
-          >
-            Attendance Date
-          </label>
-
-          <input
-            type="date"
-            value={attendanceDate}
-            onChange={(e) => setAttendanceDate(e.target.value)}
-            className="
-      border
-      px-3
-      py-2
-      rounded-lg
-    "
-          />
-        </div>
-
-        <button
-          onClick={handleSaveAttendance}
-          disabled={saving}
-          className="
-            bg-green-600
-            hover:bg-green-700
-            text-white
-            px-5
-            py-2
-            rounded-lg
-          "
-        >
-          {saving ? "Saving..." : "Save Attendance"}
-        </button>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Total Students"
+          value={students.length}
+          icon={Users2}
+          description="In this course"
+        />
+        <StatCard
+          label="Present"
+          value={presentCount}
+          icon={CheckCircle2}
+          description="Marked present today"
+          trend="up"
+          trendLabel="Present"
+        />
+        <StatCard
+          label="Absent"
+          value={students.length - presentCount}
+          icon={XCircle}
+          description="Marked absent today"
+          trend="down"
+          trendLabel="Absent"
+        />
       </div>
 
-      <div
-        className="
-          bg-white
-          rounded-xl
-          shadow
-        "
-      >
-        {students.map((student) => (
-          <div
-            key={student.id}
-            className="
-              flex
-              justify-between
-              items-center
-              border-b
-              p-4
-            "
-          >
-            <div>
-              <h3
-                className="
-                  font-semibold
-                "
-              >
-                {student.name}
-              </h3>
-
-              <p
-                className="
-                  text-gray-500
-                "
-              >
-                {student.email}
-              </p>
-            </div>
-
-            <input
-              type="checkbox"
-              checked={attendanceData[student.id] || false}
-              onChange={(e) =>
-                handleCheckboxChange(student.id, e.target.checked)
-              }
-              className="
-                w-5
-                h-5
-              "
-            />
+      <Card>
+        <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <CardTitle>Session details</CardTitle>
+            <CardDescription>Select the date and mark each student's status.</CardDescription>
           </div>
-        ))}
-      </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Input
+              label="Attendance Date"
+              type="date"
+              value={attendanceDate}
+              onChange={(e) => setAttendanceDate(e.target.value)}
+              className="w-full sm:w-auto"
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => markAll(true)}>
+                All Present
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => markAll(false)}>
+                All Absent
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {students.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                icon={Users2}
+                title="No students enrolled"
+                description="There are no students in this course to mark attendance for."
+              />
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {students.map((student) => {
+                const isPresent = attendanceData[student.id] || false;
+                return (
+                  <div
+                    key={student.id}
+                    className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-slate-50/70"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-600">
+                        {student.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900">{student.name}</h3>
+                        <p className="text-sm text-slate-500">{student.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant={isPresent ? "success" : "danger"}>
+                        {isPresent ? "Present" : "Absent"}
+                      </Badge>
+                      <input
+                        type="checkbox"
+                        checked={isPresent}
+                        onChange={(e) => handleCheckboxChange(student.id, e.target.checked)}
+                        className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-600"
+                        aria-label={`Mark ${student.name} present`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

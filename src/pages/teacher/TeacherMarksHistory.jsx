@@ -1,30 +1,43 @@
 import { useEffect, useState, useCallback } from "react";
-
 import { useParams } from "react-router-dom";
+import { ClipboardList, GraduationCap } from "lucide-react";
 
+import { getMarksByCourse, deleteMarks, updateMarks } from "../../services/teacherService";
+import AnimatedTableRow from "../../components/common/AnimatedTableRow";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import Table from "../../components/common/Table";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import {
-  getMarksByCourse,
-  deleteMarks,
-  updateMarks,
-} from "../../services/teacherService";
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Input,
+  PageHeader,
+  PageHeaderSkeleton,
+  StatCard,
+  StatCardSkeleton,
+  TableSkeleton,
+} from "../../components/ui";
 
 function TeacherMarksHistory() {
+  useDocumentTitle("Marks History");
   const { courseId } = useParams();
-
   const [marks, setMarks] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [editingMark, setEditingMark] = useState(null);
-
   const [editedScore, setEditedScore] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadMarks = useCallback(async () => {
     try {
       setLoading(true);
-
       const data = await getMarksByCourse(courseId);
-
       setMarks(data);
     } catch (error) {
       console.error(error);
@@ -32,22 +45,19 @@ function TeacherMarksHistory() {
       setLoading(false);
     }
   }, [courseId]);
+
   useEffect(() => {
     let isMounted = true;
 
     const fetchMarks = async () => {
       try {
+        setLoading(true);
         const data = await getMarksByCourse(courseId);
-
-        if (isMounted) {
-          setMarks(data);
-        }
+        if (isMounted) setMarks(data);
       } catch (error) {
         console.error(error);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -58,185 +68,170 @@ function TeacherMarksHistory() {
     };
   }, [courseId]);
 
-  const handleDelete = async (marksId) => {
-    const confirmed = window.confirm("Delete this marks record?");
-
-    if (!confirmed) {
-      return;
-    }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
     try {
-      await deleteMarks(marksId);
-
+      setDeleting(true);
+      await deleteMarks(deleteTarget.id);
       await loadMarks();
+      notify.success("Marks record deleted");
     } catch (error) {
       console.error(error);
-
-      alert("Failed to delete marks");
+      notify.error("Failed to delete marks");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
-  if (loading) {
-    return <h2>Loading Marks...</h2>;
-  }
-
   const handleEdit = (mark) => {
     setEditingMark(mark);
-
     setEditedScore(mark.score);
   };
 
   const handleUpdate = async () => {
     try {
-      await updateMarks(
-        editingMark.id,
-
-        {
-          score: Number(editedScore),
-        },
-      );
-
+      await updateMarks(editingMark.id, { score: Number(editedScore) });
       setEditingMark(null);
-
       await loadMarks();
-
-      alert("Marks Updated");
+      notify.success("Marks updated successfully");
     } catch (error) {
       console.error(error);
-
-      alert("Update Failed");
+      notify.error("Failed to update marks");
     }
   };
 
-  return (
-    <div className="p-6">
-      <h1
-        className="
-          text-3xl
-          font-bold
-          mb-6
-        "
-      >
-        Marks History
-      </h1>
+  const avgScore =
+    marks.length > 0
+      ? marks.reduce((sum, m) => sum + m.score, 0) / marks.length
+      : 0;
 
-      <div
-        className="
-          bg-white
-          shadow
-          rounded-xl
-          overflow-hidden
-        "
-      >
-        <table
-          className="
-            w-full
-          "
-        >
-          <thead>
-            <tr
-              className="
-                bg-gray-100
-              "
-            >
-              <th className="p-3 text-left">Student</th>
-
-              <th className="p-3 text-left">Subject</th>
-
-              <th className="p-3 text-left">Score</th>
-
-              <th className="p-3 text-left">Grade</th>
-
-              <th className="p-3 text-left">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {marks.map((mark) => (
-              <tr
-                key={mark.id}
-                className="
-                  border-b
-                "
-              >
-                <td className="p-3">{mark.studentName}</td>
-
-                <td className="p-3">{mark.subject}</td>
-
-                <td className="p-3">
-                  {editingMark?.id === mark.id ? (
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={editedScore}
-                      onChange={(e) => setEditedScore(e.target.value)}
-                      className="
-        border
-        rounded
-        p-1
-        w-24
-      "
-                    />
-                  ) : (
-                    mark.score
-                  )}
-                </td>
-
-                <td className="p-3">{mark.grade}</td>
-
-                <td className="p-3">
-                  {editingMark?.id === mark.id ? (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleUpdate}
-                        className="
-          text-green-600
-          hover:underline
-        "
-                      >
-                        Save
-                      </button>
-
-                      <button
-                        onClick={() => setEditingMark(null)}
-                        className="
-          text-gray-600
-          hover:underline
-        "
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleEdit(mark)}
-                        className="
-          text-blue-600
-          hover:underline
-        "
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(mark.id)}
-                        className="
-          text-red-600
-          hover:underline
-        "
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+        <TableSkeleton rows={6} cols={5} />
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Assessment"
+        title="Marks History"
+        description="Review and update student marks for this course."
+      />
+
+      {marks.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatCard
+            label="Total Records"
+            value={marks.length}
+            icon={ClipboardList}
+            description="Marks entries logged"
+          />
+          <StatCard
+            label="Average Score"
+            value={avgScore.toFixed(1)}
+            icon={GraduationCap}
+            description="Across all entries"
+            trend="up"
+            trendLabel="Average"
+          />
+        </div>
+      )}
+
+      {marks.length === 0 ? (
+        <EmptyState
+          icon={GraduationCap}
+          title="No marks recorded"
+          description="Marks entries for this course will appear here once submitted."
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Course marks</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Subject</th>
+                  <th className="px-4 py-3">Score</th>
+                  <th className="px-4 py-3">Grade</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {marks.map((mark, index) => (
+                  <AnimatedTableRow key={mark.id} index={index} className="hover:bg-slate-50/70">
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {mark.studentName}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{mark.subject}</td>
+                    <td className="px-4 py-3">
+                      {editingMark?.id === mark.id ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={editedScore}
+                          onChange={(e) => setEditedScore(e.target.value)}
+                          className="w-24"
+                        />
+                      ) : (
+                        <span className="font-semibold text-slate-900">{mark.score}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="success">{mark.grade}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      {editingMark?.id === mark.id ? (
+                        <div className="flex justify-end gap-2">
+                          <Button variant="secondary" size="sm" onClick={() => setEditingMark(null)}>
+                            Cancel
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handleUpdate}>
+                            Save
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end gap-2">
+                          <Button variant="secondary" size="sm" onClick={() => handleEdit(mark)}>
+                            Edit
+                          </Button>
+                          <Button variant="danger" size="sm" onClick={() => setDeleteTarget(mark)}>
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </AnimatedTableRow>
+                ))}
+              </tbody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      <ConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete marks record"
+        message="Remove this marks entry from the course history?"
+        confirmLabel="Delete"
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -1,219 +1,85 @@
-import {
-  useEffect,
-  useState
-} from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import {
-  useParams,
-  useNavigate
-} from "react-router-dom";
-
-import {
-  getTeacherById,
-  updateTeacher
-}
-from "../../services/adminTeacherService";
+import { getTeacherById, updateTeacher } from "../../services/adminTeacherService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from "../../components/ui";
 
 function EditTeacherPage() {
+  useDocumentTitle("Edit Teacher");
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const { id } =
-    useParams();
-
-  const navigate =
-    useNavigate();
-
-  const [formData,
-         setFormData] =
-         useState({
-
+  const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     department: "",
-    designation: ""
-
+    designation: "",
   });
 
   useEffect(() => {
-
-    const loadTeacher =
-      async () => {
-
-        try {
-
-          const teacher =
-            await getTeacherById(
-              id
-            );
-
-          setFormData({
-
-            firstName:
-              teacher.firstName,
-
-            lastName:
-              teacher.lastName,
-
-            department:
-              teacher.department,
-
-            designation:
-              teacher.designation
-
-          });
-
-        } catch (error) {
-
-          console.error(error);
-
-        }
-      };
-
-    loadTeacher();
-
-  }, [id]);
-
-  const handleChange =
-    (e) => {
-
-      setFormData({
-
-        ...formData,
-
-        [e.target.name]:
-          e.target.value
-
-      });
-    };
-
-  const handleSubmit =
-    async (e) => {
-
-      e.preventDefault();
-
+    const loadTeacher = async () => {
       try {
+        const teacher = await getTeacherById(id);
 
-        await updateTeacher(
-          id,
-          formData
-        );
-
-        alert(
-          "Teacher Updated"
-        );
-
-        navigate(
-          "/admin/teachers"
-        );
-
+        setFormData({
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          department: teacher.department,
+          designation: teacher.designation,
+        });
       } catch (error) {
-
         console.error(error);
-
       }
     };
 
+    loadTeacher();
+  }, [id]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await updateTeacher(id, formData);
+      notify.success("Teacher updated successfully");
+      navigate("/admin/teachers");
+    } catch (error) {
+      console.error(error);
+      notify.error(error.response?.data?.message || "Failed to update teacher");
+    }
+  };
+
   return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Edit Teacher"
+        description="Update teacher details while keeping their existing assignments intact."
+      />
 
-    <div>
-
-      <h1
-        className="
-          text-3xl
-          font-bold
-          mb-6
-        "
-      >
-        Edit Teacher
-      </h1>
-
-      <form
-        onSubmit={
-          handleSubmit
-        }
-        className="
-          bg-white
-          p-6
-          rounded-xl
-          shadow
-          space-y-4
-        "
-      >
-
-        <input
-          name="firstName"
-          value={
-            formData.firstName
-          }
-          onChange={
-            handleChange
-          }
-          className="
-            border
-            p-2
-            w-full
-          "
-        />
-
-        <input
-          name="lastName"
-          value={
-            formData.lastName
-          }
-          onChange={
-            handleChange
-          }
-          className="
-            border
-            p-2
-            w-full
-          "
-        />
-
-        <input
-          name="department"
-          value={
-            formData.department
-          }
-          onChange={
-            handleChange
-          }
-          className="
-            border
-            p-2
-            w-full
-          "
-        />
-
-        <input
-          name="designation"
-          value={
-            formData.designation
-          }
-          onChange={
-            handleChange
-          }
-          className="
-            border
-            p-2
-            w-full
-          "
-        />
-
-        <button
-          type="submit"
-          className="
-            bg-blue-600
-            text-white
-            px-4
-            py-2
-            rounded
-          "
-        >
-          Update Teacher
-        </button>
-
-      </form>
-
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile update</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+            <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required />
+            <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required />
+            <Input label="Department" name="department" value={formData.department} onChange={handleChange} required />
+            <Input label="Designation" name="designation" value={formData.designation} onChange={handleChange} required />
+            <div className="md:col-span-2 flex justify-end">
+              <Button type="submit">Update Teacher</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

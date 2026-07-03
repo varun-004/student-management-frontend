@@ -1,48 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { BookOpen, Plus, Search } from "lucide-react";
 
 import { getAllCourses, createCourse } from "../../services/courseService";
-
 import CourseCard from "../../components/courses/CourseCard";
-
-import Modal from "../../components/ui/Modal";
-
 import CourseForm from "../../components/courses/CourseForm";
-import toast from "react-hot-toast";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
+import {
+  Button,
+  CardGridSkeleton,
+  EmptyState,
+  Input,
+  Modal,
+  PageHeader,
+  StatCard,
+} from "../../components/ui";
 
 const CoursesPage = () => {
+  useDocumentTitle("Courses");
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [createLoading, setCreateLoading] = useState(false);
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD COURSES
-  |--------------------------------------------------------------------------
-  */
-
-  const filteredCourses = courses.filter((course) =>
-    course.courseName?.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredCourses = useMemo(
+    () =>
+      courses.filter((course) =>
+        course.courseName?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [courses, searchTerm],
   );
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
         setLoading(true);
-
         const data = await getAllCourses();
-
-
         setCourses(data.content);
       } catch (err) {
         console.error(err);
-
         setError("Failed to fetch courses");
       } finally {
         setLoading(false);
@@ -52,130 +50,99 @@ const CoursesPage = () => {
     loadCourses();
   }, []);
 
-  /*
-  |--------------------------------------------------------------------------
-  | CREATE COURSE
-  |--------------------------------------------------------------------------
-  */
-
   const handleCreateCourse = async (formData) => {
     try {
       setCreateLoading(true);
-
       await createCourse(formData);
-
-      /*
-      |--------------------------------------------------------------------------
-      | REFRESH COURSES
-      |--------------------------------------------------------------------------
-      */
-
       const updatedCourses = await getAllCourses();
-
       setCourses(updatedCourses.content);
-
-      /*
-      |--------------------------------------------------------------------------
-      | CLOSE MODAL
-      |--------------------------------------------------------------------------
-      */
-
       setIsModalOpen(false);
+      notify.success("Course created successfully");
     } catch (err) {
       console.error(err);
-
-      toast.error("Failed to create course");
+      notify.error("Failed to create course");
     } finally {
       setCreateLoading(false);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
-
-  if (loading) {
-    return <div className="p-6 text-lg">Loading courses...</div>;
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | ERROR
-  |--------------------------------------------------------------------------
-  */
-
   if (error) {
-    return <div className="p-6 text-red-500">{error}</div>;
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {error}
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
-      {/* HEADER */}
-
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Courses</h1>
-
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-        >
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Administration"
+        title="Courses Management"
+        description="Browse, search, and manage your institution's course catalog."
+      >
+        <Button leftIcon={Plus} onClick={() => setIsModalOpen(true)}>
           Add Course
-        </button>
+        </Button>
+      </PageHeader>
+
+      {!loading && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            label="Total Courses"
+            value={courses.length}
+            icon={BookOpen}
+            description="Courses in the catalog"
+            trend="neutral"
+            trendLabel="Catalog"
+          />
+          <StatCard
+            label="Showing"
+            value={filteredCourses.length}
+            icon={Search}
+            description="Results matching your search"
+            trend="neutral"
+            trendLabel="Filtered"
+          />
+        </div>
+      )}
+
+      <div className="max-w-md">
+        <Input
+          type="text"
+          placeholder="Search courses..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          leftIcon={Search}
+        />
       </div>
 
-      <input
-        type="text"
-        placeholder="Search courses..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="
-    w-full
-    border
-    rounded-lg
-    px-4
-    py-2
-    mb-6
-  "
-      />
-
-      {/* COURSES GRID */}
-
-     {filteredCourses.length === 0 ? (
-
-  <div
-    className="
-      bg-white
-      shadow
-      rounded-xl
-      p-8
-      text-center
-    "
-  >
-    <p className="text-gray-500">
-      No courses found.
-    </p>
-  </div>
-
-) : (
-
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
-    {filteredCourses.map(
-      (course) => (
-        <CourseCard
-          key={course.id}
-          course={course}
+      {loading ? (
+        <CardGridSkeleton count={6} />
+      ) : filteredCourses.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title="No courses found"
+          description={
+            searchTerm
+              ? "Try a different search term."
+              : "Create your first course to get started."
+          }
+          action={
+            !searchTerm ? (
+              <Button leftIcon={Plus} onClick={() => setIsModalOpen(true)}>
+                Add Course
+              </Button>
+            ) : null
+          }
         />
-      )
-    )}
-
-  </div>
-
-)}
-
-      {/* MODAL */}
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredCourses.map((course) => (
+            <CourseCard key={course.id} course={course} />
+          ))}
+        </div>
+      )}
 
       <Modal
         isOpen={isModalOpen}
