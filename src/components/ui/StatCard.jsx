@@ -22,7 +22,7 @@ const StatCard = ({
     trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : null;
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden transition-shadow duration-200 hover:shadow-md", className)}>
       <CardContent className="p-0">
         <div className="p-6">
           <div className="flex items-start justify-between gap-4">

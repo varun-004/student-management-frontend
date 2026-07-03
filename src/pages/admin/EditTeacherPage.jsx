@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import toast from "react-hot-toast";
 
 import { getTeacherById, updateTeacher } from "../../services/adminTeacherService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from "../../components/ui";
 
 function EditTeacherPage() {
+  useDocumentTitle("Edit Teacher");
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -47,11 +49,11 @@ function EditTeacherPage() {
 
     try {
       await updateTeacher(id, formData);
-      toast.success("Teacher updated successfully");
+      notify.success("Teacher updated successfully");
       navigate("/admin/teachers");
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to update teacher");
+      notify.error(error.response?.data?.message || "Failed to update teacher");
     }
   };
 

@@ -38,22 +38,24 @@ const Spinner = ({
   );
 };
 
-export const PageLoader = ({ label = "Loading" }) => {
-  return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-      <Spinner size="xl" label={label} />
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-    </div>
-  );
-};
+export const PageLoader = ({ label = "Loading page" }) => (
+  <div
+    className="flex min-h-[50vh] items-center justify-center"
+    role="status"
+    aria-label={label}
+  >
+    <Spinner size="xl" label={label} />
+  </div>
+);
 
-export const FullPageLoader = ({ label = "Loading" }) => {
-  return (
-    <div className="flex h-screen flex-col items-center justify-center gap-3 bg-surface-muted">
-      <Spinner size="xl" label={label} />
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-    </div>
-  );
-};
+export const FullPageLoader = ({ label = "Loading application" }) => (
+  <div
+    className="flex h-screen items-center justify-center bg-surface-muted"
+    role="status"
+    aria-label={label}
+  >
+    <Spinner size="xl" label={label} />
+  </div>
+);
 
 export default Spinner;

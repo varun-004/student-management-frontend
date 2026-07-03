@@ -1,186 +1,175 @@
 import { useEffect, useState } from "react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
+import { getAllCourses, getCourseById } from "../../services/courseService";
+import { markAttendance } from "../../services/attendanceService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import {
-  getAllCourses,
-  getCourseById,
-} from "../../services/courseService";
-
-import {
-  markAttendance,
-} from "../../services/attendanceService";
-
-import toast from "react-hot-toast";
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  ListSkeleton,
+  PageHeader,
+  PageHeaderSkeleton,
+  Select,
+} from "../../components/ui";
 
 const AttendanceMarkPage = () => {
-
-  const [courses, setCourses] =
-    useState([]);
-
-  const [selectedCourse,
-    setSelectedCourse] =
-      useState("");
-
-  const [students, setStudents] =
-    useState([]);
+  useDocumentTitle("Mark Attendance");
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [students, setStudents] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(false);
 
   useEffect(() => {
-
-    const loadCourses =
-      async () => {
-
-        const data =
-          await getAllCourses();
-
-        setCourses(
-          data.content || []
-        );
-      };
-
-    loadCourses();
-
-  }, []);
-
-  const handleCourseChange =
-    async (courseId) => {
-
-      setSelectedCourse(courseId);
-
-      const course =
-        await getCourseById(
-          courseId
-        );
-
-      setStudents(
-        course.students || []
-      );
+    const loadCourses = async () => {
+      try {
+        const data = await getAllCourses();
+        setCourses(data.content || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingCourses(false);
+      }
     };
 
-  const handleAttendance =
-  async (
-    studentId,
-    present
-  ) => {
+    loadCourses();
+  }, []);
+
+  const handleCourseChange = async (courseId) => {
+    setSelectedCourse(courseId);
+
+    if (!courseId) {
+      setStudents([]);
+      return;
+    }
 
     try {
-
-      await markAttendance({
-
-        studentId,
-
-        courseId:
-          selectedCourse,
-
-        present,
-
-      });
-
-      toast.success(
-        "Attendance Saved"
-      );
-
-    } catch (error) {
-
-      console.error(error);
-
-      toast.error(
-
-        error?.response?.data?.message ||
-
-        "Attendance already marked"
-
-      );
+      setLoadingStudents(true);
+      const course = await getCourseById(courseId);
+      setStudents(course.students || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingStudents(false);
     }
-};
+  };
+
+  const handleAttendance = async (studentId, present) => {
+    try {
+      await markAttendance({
+        studentId,
+        courseId: selectedCourse,
+        present,
+      });
+      notify.success("Attendance saved successfully");
+    } catch (error) {
+      console.error(error);
+      notify.error(error?.response?.data?.message || "Attendance already marked");
+    }
+  };
+
+  if (loadingCourses) {
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+          <ListSkeleton rows={1} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Attendance"
+        title="Mark Attendance"
+        description="Select a course and mark each student as present or absent."
+      />
 
-      <h1 className="text-3xl font-bold mb-6">
-        Mark Attendance
-      </h1>
-
-      <select
-        value={selectedCourse}
-        onChange={(e) =>
-          handleCourseChange(
-            e.target.value
-          )
-        }
-        className="border px-4 py-2 rounded-lg mb-6"
-      >
-
-        <option value="">
-          Select Course
-        </option>
-
-        {courses.map((course) => (
-
-          <option
-            key={course.id}
-            value={course.id}
+      <Card>
+        <CardHeader>
+          <CardTitle>Select course</CardTitle>
+          <CardDescription>Choose the course to mark attendance for.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            label="Course"
+            value={selectedCourse}
+            onChange={(e) => handleCourseChange(e.target.value)}
           >
-            {course.courseName}
-          </option>
+            <option value="">Select Course</option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.courseName}
+              </option>
+            ))}
+          </Select>
+        </CardContent>
+      </Card>
 
-        ))}
-
-      </select>
-
-      <div className="space-y-4">
-
-        {students.map((student) => (
-
-          <div
-            key={student.id}
-            className="flex items-center justify-between border p-4 rounded-lg"
-          >
-
-            <div>
-
-              <h3 className="font-semibold">
-                {student.name}
-              </h3>
-
-              <p>
-                {student.email}
-              </p>
-
+      {loadingStudents ? (
+        <ListSkeleton rows={6} />
+      ) : !selectedCourse ? (
+        <EmptyState
+          title="Select a course"
+          description="Choose a course above to view the student list."
+        />
+      ) : students.length === 0 ? (
+        <EmptyState
+          title="No students enrolled"
+          description="This course has no enrolled students yet."
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Student list</CardTitle>
+            <CardDescription>
+              {students.length} student{students.length !== 1 ? "s" : ""} enrolled
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-slate-100">
+              {students.map((student) => (
+                <div
+                  key={student.id}
+                  className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-slate-50/70 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{student.name}</h3>
+                    <p className="text-sm text-slate-500">{student.email}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      leftIcon={CheckCircle2}
+                      onClick={() => handleAttendance(student.id, true)}
+                    >
+                      Present
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      leftIcon={XCircle}
+                      onClick={() => handleAttendance(student.id, false)}
+                    >
+                      Absent
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <div className="flex gap-3">
-
-              <button
-                onClick={() =>
-                  handleAttendance(
-                    student.id,
-                    true
-                  )
-                }
-                className="bg-green-600 text-white px-4 py-2 rounded"
-              >
-                Present
-              </button>
-
-              <button
-                onClick={() =>
-                  handleAttendance(
-                    student.id,
-                    false
-                  )
-                }
-                className="bg-red-600 text-white px-4 py-2 rounded"
-              >
-                Absent
-              </button>
-
-            </div>
-
-          </div>
-
-        ))}
-
-      </div>
-
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

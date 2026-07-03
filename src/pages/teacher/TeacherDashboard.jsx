@@ -7,11 +7,11 @@ import {
   CalendarCheck2,
   FileText,
   GraduationCap,
-  Sparkles,
   Users2,
 } from "lucide-react";
 
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import { DashboardSkeleton, EmptyState } from "../../components/ui";
 import TopCoursesChart from "../../components/analytics/TopCoursesChart";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
@@ -21,6 +21,7 @@ import StatCard from "../../components/ui/StatCard";
 import { getTeacherByEmail, getTeacherDashboard } from "../../services/teacherService";
 
 function TeacherDashboard() {
+  useDocumentTitle("Teacher Dashboard");
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,7 @@ function TeacherDashboard() {
   }, [stats]);
 
   if (loading) {
-    return <LoadingSpinner label="Loading teacher dashboard" />;
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -95,14 +96,26 @@ function TeacherDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             {metrics.assignedCourses.length > 0 ? metrics.assignedCourses.map((course, index) => (
-              <div key={`${course?.courseName || course?.name || "course"}-${index}`} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+              <button
+                key={`${course?.courseName || course?.name || "course"}-${index}`}
+                type="button"
+                onClick={() => course?.id && navigate(`/teacher/course/${course.id}`)}
+                className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-left transition hover:border-brand-200 hover:bg-brand-50/50"
+              >
                 <div>
                   <p className="font-medium text-slate-800">{course?.courseName || course?.name || "Course"}</p>
                   <p className="text-sm text-slate-500">{course?.studentCount ?? course?.totalStudents ?? 0} learners enrolled</p>
                 </div>
                 <Badge variant="success">Open</Badge>
-              </div>
-            )) : <p className="text-sm text-slate-500">No course data available yet.</p>}
+              </button>
+            )) : (
+              <EmptyState
+                inline
+                icon={BookOpen}
+                title="No courses assigned"
+                description="Your assigned courses will appear here once they are available."
+              />
+            )}
           </CardContent>
         </Card>
 

@@ -1,94 +1,56 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { RefreshCw, Search, ShieldAlert, Users2 } from "lucide-react";
 
+import { getStudentRisks } from "../../services/analyticsService";
+import AnimatedTableRow from "../../components/common/AnimatedTableRow";
+import Table from "../../components/common/Table";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import {
-  getStudentRisks,
-} from "../../services/analyticsService";
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Input,
+  PageHeader,
+  PageHeaderSkeleton,
+  StatCard,
+  StatCardSkeleton,
+  TableSkeleton,
+} from "../../components/ui";
 
-import LoadingSpinner from "../../components/common/LoadingSpinner";
-import ErrorMessage from "../../components/common/ErrorMessage";
+const getRiskVariant = (risk) => {
+  switch (risk) {
+    case "LOW":
+    case "SAFE":
+      return "success";
+    case "MEDIUM":
+    case "WARNING":
+      return "warning";
+    case "HIGH":
+    case "CRITICAL":
+      return "danger";
+    default:
+      return "default";
+  }
+};
 
 const StudentRiskPage = () => {
+  useDocumentTitle("Student Risk Analytics");
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [riskFilter, setRiskFilter] = useState("");
 
-  const [students, setStudents] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD DATA
-  |--------------------------------------------------------------------------
-  */
-
-  useEffect(() => {
-
-  const fetchRiskData = async () => {
-
-    try {
-
-      const data =
-        await getStudentRisks();
-
-      setStudents(data);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setError(
-        "Failed to load student risk analytics"
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  };
-
-  fetchRiskData();
-
-}, []);
-  /*
-  |--------------------------------------------------------------------------
-  | RISK BADGES
-  |--------------------------------------------------------------------------
-  */
-
-  const getRiskBadge = (risk) => {
-
-    switch (risk) {
-
-      case "LOW":
-      case "SAFE":
-        return "bg-green-100 text-green-700";
-
-      case "MEDIUM":
-      case "WARNING":
-        return "bg-yellow-100 text-yellow-700";
-
-      case "HIGH":
-      case "CRITICAL":
-        return "bg-red-100 text-red-700";
-
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  /*
-  |--------------------------------------------------------------------------
-  | REFRESH DATA
-  |--------------------------------------------------------------------------
-  */
-
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
     setError("");
+
     try {
       const data = await getStudentRisks();
       setStudents(data);
@@ -97,169 +59,207 @@ const StudentRiskPage = () => {
       setError("Failed to load student risk analytics");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchRiskData = async () => {
+      try {
+        const data = await getStudentRisks();
+        if (isMounted) setStudents(data);
+      } catch (err) {
+        console.error(err);
+        if (isMounted) setError("Failed to load student risk analytics");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchRiskData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const riskCounts = useMemo(() => {
+    const counts = { high: 0, medium: 0, low: 0 };
+    students.forEach((s) => {
+      const level = s.riskLevel?.toUpperCase();
+      if (level === "HIGH" || level === "CRITICAL") counts.high += 1;
+      else if (level === "MEDIUM" || level === "WARNING") counts.medium += 1;
+      else counts.low += 1;
+    });
+    return counts;
+  }, [students]);
+
+  const filteredStudents = useMemo(() => {
+    const query = searchTerm.toLowerCase();
+    return students.filter((student) => {
+      const matchesSearch = !query || student.studentName?.toLowerCase().includes(query);
+      const matchesRisk = !riskFilter || student.riskLevel === riskFilter;
+      return matchesSearch && matchesRisk;
+    });
+  }, [students, searchTerm, riskFilter]);
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+        <TableSkeleton rows={8} cols={4} />
+      </div>
+    );
   }
-
-  /*
-  |--------------------------------------------------------------------------
-  | ERROR
-  |--------------------------------------------------------------------------
-  */
 
   if (error) {
     return (
-      <ErrorMessage
-        message={error}
-      />
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+        <Button leftIcon={RefreshCw} onClick={() => loadData()}>
+          Try Again
+        </Button>
+      </div>
     );
   }
 
   return (
-    <div className="p-6">
-
-      {/* HEADER */}
-
-      <div className="flex justify-between items-center mb-6">
-
-        <h1 className="text-3xl font-bold">
-          Student Risk Analytics
-        </h1>
-
-        <button
-          onClick={loadData}
-          className="
-            bg-blue-600
-            hover:bg-blue-700
-            text-white
-            px-4
-            py-2
-            rounded-lg
-          "
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Analytics"
+        title="Student Risk Analytics"
+        description="Identify students who may need academic intervention based on attendance and marks."
+      >
+        <Button
+          variant="secondary"
+          leftIcon={RefreshCw}
+          onClick={() => loadData(true)}
+          loading={refreshing}
         >
           Refresh
-        </button>
+        </Button>
+      </PageHeader>
 
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total Students"
+          value={students.length}
+          icon={Users2}
+          description="Students analyzed"
+          trend="neutral"
+          trendLabel="Monitored"
+        />
+        <StatCard
+          label="High Risk"
+          value={riskCounts.high}
+          icon={ShieldAlert}
+          description="Requires immediate attention"
+          trend="down"
+          trendLabel="Critical"
+        />
+        <StatCard
+          label="Medium Risk"
+          value={riskCounts.medium}
+          icon={ShieldAlert}
+          description="Needs monitoring"
+          trend="neutral"
+          trendLabel="Warning"
+        />
+        <StatCard
+          label="Low Risk"
+          value={riskCounts.low}
+          icon={ShieldAlert}
+          description="On track academically"
+          trend="up"
+          trendLabel="Healthy"
+        />
       </div>
 
-      {/* EMPTY STATE */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search &amp; filter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-[1fr_200px]">
+            <Input
+              type="text"
+              placeholder="Search by student name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={Search}
+            />
+            <select
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+            >
+              <option value="">All risk levels</option>
+              <option value="HIGH">High</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="WARNING">Warning</option>
+              <option value="LOW">Low</option>
+              <option value="SAFE">Safe</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
 
-      {students.length === 0 ? (
-
-        <div
-          className="
-            bg-white
-            shadow
-            rounded-xl
-            p-8
-            text-center
-          "
-        >
-          <p className="text-gray-500">
-            No risk analytics available.
-          </p>
-        </div>
-
+      {filteredStudents.length === 0 ? (
+        <EmptyState
+          icon={ShieldAlert}
+          title="No risk data found"
+          description={
+            searchTerm || riskFilter
+              ? "Try adjusting your search or filter."
+              : "No risk analytics available yet."
+          }
+        />
       ) : (
-
-        <div
-          className="
-            bg-white
-            shadow
-            rounded-xl
-            overflow-hidden
-          "
-        >
-
-          <table className="w-full">
-
-            <thead>
-
-              <tr className="bg-gray-100">
-
-                <th className="p-4 text-left">
-                  Student
-                </th>
-
-                <th className="p-4 text-left">
-                  Attendance %
-                </th>
-
-                <th className="p-4 text-left">
-                  Average Marks
-                </th>
-
-                <th className="p-4 text-left">
-                  Risk Level
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {students.map(
-                (student) => (
-
-                  <tr
-                    key={student.studentId}
-                    className="border-t"
-                  >
-
-                    <td className="p-4">
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Attendance %</th>
+                  <th className="px-4 py-3">Average Marks</th>
+                  <th className="px-4 py-3">Risk Level</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredStudents.map((student, index) => (
+                  <AnimatedTableRow key={student.studentId} index={index} className="hover:bg-slate-50/70">
+                    <td className="px-4 py-3 font-medium text-slate-900">
                       {student.studentName}
                     </td>
-
-                    <td className="p-4">
+                    <td className="px-4 py-3 text-slate-600">
                       {student.attendance.toFixed(2)}%
                     </td>
-
-                    <td className="p-4">
+                    <td className="px-4 py-3 text-slate-600">
                       {student.marks.toFixed(2)}
                     </td>
-
-                    <td className="p-4">
-
-                      <span
-                        className={`
-                          px-3
-                          py-1
-                          rounded-full
-                          text-sm
-                          font-medium
-                          ${getRiskBadge(
-                            student.riskLevel
-                          )}
-                        `}
-                      >
+                    <td className="px-4 py-3">
+                      <Badge variant={getRiskVariant(student.riskLevel)}>
                         {student.riskLevel}
-                      </span>
-
+                      </Badge>
                     </td>
-
-                  </tr>
-
-                )
-              )}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
+                  </AnimatedTableRow>
+                ))}
+              </tbody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
-
     </div>
   );
 };

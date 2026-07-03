@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 
 import useAuth from "../../auth/useAuth";
-import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import { DashboardSkeleton } from "../../components/ui";
 import TopCoursesChart from "../../components/analytics/TopCoursesChart";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
@@ -28,6 +29,7 @@ import { getStudentByEmail } from "../../services/studentService";
 import { getTeacherByEmail, getTeacherDashboard } from "../../services/teacherService";
 
 function Dashboard() {
+  useDocumentTitle("Dashboard");
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
@@ -148,7 +150,7 @@ function Dashboard() {
   }, [studentData]);
 
   if (loading) {
-    return <LoadingSpinner label="Loading dashboard" />;
+    return <DashboardSkeleton />;
   }
 
   if (user?.role === "TEACHER") {

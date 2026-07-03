@@ -1,12 +1,28 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { Download, Search } from "lucide-react";
 
 import { getAllCourses } from "../../services/courseService";
 import { getAttendanceByCourse, exportAttendanceCsv } from "../../services/attendanceService";
 import Table from "../../components/common/Table";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader, Select } from "../../components/ui";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Input,
+  PageHeader,
+  Select,
+  TableSkeleton,
+} from "../../components/ui";
 
 const AttendanceHistoryPage = () => {
+  useDocumentTitle("Attendance History");
   const [courses, setCourses] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("");
@@ -16,7 +32,7 @@ const AttendanceHistoryPage = () => {
 
   const handleExport = async () => {
     if (!selectedCourse) {
-      toast.error("Please select a course first.");
+      notify.error("Please select a course first.");
       return;
     }
 
@@ -30,10 +46,10 @@ const AttendanceHistoryPage = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      toast.success("CSV exported");
+      notify.success("CSV exported successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to export CSV");
+      notify.error("Failed to export CSV");
     }
   };
 
@@ -77,21 +93,33 @@ const AttendanceHistoryPage = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Attendance History" description="Review attendance records and export them for reporting." />
+      <PageHeader
+        eyebrow="Records"
+        title="Attendance History"
+        description="Review attendance records and export them for reporting."
+      >
+        <Button
+          variant="outline"
+          leftIcon={Download}
+          onClick={handleExport}
+          disabled={!selectedCourse}
+        >
+          Export CSV
+        </Button>
+      </PageHeader>
 
       <Card>
-        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <CardTitle>Filters</CardTitle>
-            <p className="text-sm text-slate-500">Select a course and search by student name.</p>
-          </div>
-          <Button variant="outline" onClick={handleExport} disabled={!selectedCourse}>
-            Export CSV
-          </Button>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Select a course and search by student name.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-            <Select value={selectedCourse} onChange={(e) => handleCourseChange(e.target.value)}>
+            <Select
+              label="Course"
+              value={selectedCourse}
+              onChange={(e) => handleCourseChange(e.target.value)}
+            >
               <option value="">Select Course</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
@@ -99,18 +127,40 @@ const AttendanceHistoryPage = () => {
                 </option>
               ))}
             </Select>
-            <Input type="text" placeholder="Search Student..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <Input
+              type="text"
+              placeholder="Search student..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={Search}
+            />
           </div>
         </CardContent>
       </Card>
 
-      {loading && <div className="text-sm text-slate-500">Loading attendance...</div>}
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-      {!loading && filteredAttendance.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-slate-500">No attendance records found.</CardContent>
-        </Card>
+      {loading ? (
+        <TableSkeleton rows={6} cols={4} />
+      ) : !selectedCourse ? (
+        <EmptyState
+          icon={Search}
+          title="Select a course"
+          description="Choose a course from the filter above to view attendance history."
+        />
+      ) : filteredAttendance.length === 0 ? (
+        <EmptyState
+          title="No attendance records found"
+          description={
+            searchTerm
+              ? "No records match your search."
+              : "No attendance has been recorded for this course yet."
+          }
+        />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -126,13 +176,15 @@ const AttendanceHistoryPage = () => {
               <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredAttendance.map((record) => (
                   <tr key={record.id} className="hover:bg-slate-50/70">
-                    <td className="px-4 py-3 font-medium text-slate-900">{record.studentName}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {record.studentName}
+                    </td>
                     <td className="px-4 py-3 text-slate-600">{record.courseName}</td>
                     <td className="px-4 py-3 text-slate-600">{record.attendanceDate}</td>
                     <td className="px-4 py-3">
-                      <span className={record.present ? "rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700" : "rounded-full bg-rose-100 px-3 py-1 text-sm font-medium text-rose-700"}>
+                      <Badge variant={record.present ? "success" : "danger"}>
                         {record.present ? "Present" : "Absent"}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 
 import { registerUser } from "../../services/authService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from "../../components/ui";
 
 const Register = () => {
+  useDocumentTitle("Register");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -29,11 +31,11 @@ const Register = () => {
     try {
       setLoading(true);
       await registerUser(formData);
-      toast.success("Registration successful");
+      notify.success("Registration successful");
       navigate("/login");
     } catch (error) {
       console.log(error);
-      toast.error("Registration failed");
+      notify.error("Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }

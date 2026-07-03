@@ -1,290 +1,191 @@
-import { useCallback, useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { GraduationCap, Save, Users2 } from "lucide-react";
 
+import { getCourseStudents, addMarks } from "../../services/teacherService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import {
-  getCourseStudents,
-  addMarks
-}
-from "../../services/teacherService";
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Input,
+  ListSkeleton,
+  PageHeader,
+  PageHeaderSkeleton,
+  StatCard,
+  StatCardSkeleton,
+} from "../../components/ui";
 
 function TeacherMarks() {
-
-  const { courseId } =
-    useParams();
-
-  const [students,
-         setStudents] =
-         useState([]);
-
-  const [subject,
-         setSubject] =
-         useState("");
-
-  const [scores,
-         setScores] =
-         useState({});
-
-  const [loading,
-         setLoading] =
-         useState(true);
-
-  const [saving,
-         setSaving] =
-         useState(false);
-
-  const loadStudents = useCallback(
-    async () => {
-
-      try {
-
-        const data =
-          await getCourseStudents(
-            courseId
-          );
-
-        setStudents(data);
-
-      } catch (error) {
-
-        console.error(error);
-
-      } finally {
-
-        setLoading(false);
-
-      }
-    },
-    [courseId]
-  );
+  useDocumentTitle("Enter Marks");
+  const { courseId } = useParams();
+  const [students, setStudents] = useState([]);
+  const [subject, setSubject] = useState("");
+  const [scores, setScores] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
 
     const fetchStudents = async () => {
-      await loadStudents();
+      try {
+        const data = await getCourseStudents(courseId);
+        if (isMounted) setStudents(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     };
 
     fetchStudents();
 
-}, [loadStudents]);
-
-  const handleScoreChange =
-    (studentId, value) => {
-
-      setScores(
-        prev => ({
-          ...prev,
-          [studentId]: value
-        })
-      );
+    return () => {
+      isMounted = false;
     };
+  }, [courseId]);
 
-  const handleSaveMarks =
-    async () => { 
+  const filledCount = useMemo(
+    () => Object.values(scores).filter((v) => v !== "" && v != null).length,
+    [scores],
+  );
 
-      try {
+  const handleScoreChange = (studentId, value) => {
+    setScores((prev) => ({
+      ...prev,
+      [studentId]: value,
+    }));
+  };
 
-        setSaving(true);
-
-        for (const student of students) {
-
-          await addMarks({
-
-            studentId:
-              student.id,
-
-            courseId:
-              Number(courseId),
-
-            subject,
-
-            score:
-              Number(
-                scores[
-                  student.id
-                ] || 0
-              )
-          });
-        }
-
-        alert(
-          "Marks saved successfully"
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          "Failed to save marks"
-        );
-
-      } finally {
-
-        setSaving(false);
-
+  const handleSaveMarks = async () => {
+    try {
+      setSaving(true);
+      for (const student of students) {
+        await addMarks({
+          studentId: student.id,
+          courseId: Number(courseId),
+          subject,
+          score: Number(scores[student.id] || 0),
+        });
       }
-    };
+      notify.success("Marks saved successfully");
+    } catch (error) {
+      console.error(error);
+      notify.error(error?.response?.data?.message || "Failed to save marks");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
-
     return (
-      <h2>
-        Loading Students...
-      </h2>
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+        <ListSkeleton rows={6} />
+      </div>
     );
   }
 
   return (
-    <div className="p-6">
-
-      <div
-        className="
-          flex
-          justify-between
-          items-center
-          mb-6
-        "
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Assessment"
+        title="Enter Marks"
+        description="Record scores for all students in this course."
       >
+        <Button leftIcon={Save} onClick={handleSaveMarks} loading={saving}>
+          Save Marks
+        </Button>
+      </PageHeader>
 
-        <h1
-          className="
-            text-3xl
-            font-bold
-          "
-        >
-          Enter Marks
-        </h1>
-
-        <button
-          onClick={
-            handleSaveMarks
-          }
-          disabled={saving}
-          className="
-            bg-blue-600
-            hover:bg-blue-700
-            text-white
-            px-5
-            py-2
-            rounded-lg
-          "
-        >
-          {
-            saving
-              ? "Saving..."
-              : "Save Marks"
-          }
-        </button>
-
-      </div>
-
-      <div
-        className="
-          mb-6
-        "
-      >
-
-        <label
-          className="
-            block
-            mb-2
-            font-medium
-          "
-        >
-          Subject
-        </label>
-
-        <input
-          type="text"
-          value={subject}
-          onChange={(e) =>
-            setSubject(
-              e.target.value
-            )
-          }
-          className="
-            border
-            rounded-lg
-            p-2
-            w-full
-          "
-          placeholder="Java"
+      <div className="grid gap-4 sm:grid-cols-2">
+        <StatCard
+          label="Students"
+          value={students.length}
+          icon={Users2}
+          description="Enrolled in this course"
         />
-
+        <StatCard
+          label="Scores Entered"
+          value={filledCount}
+          icon={GraduationCap}
+          description="Out of total students"
+          trend={filledCount === students.length ? "up" : "neutral"}
+          trendLabel={filledCount === students.length ? "Complete" : "In progress"}
+        />
       </div>
 
-      <div
-        className="
-          bg-white
-          rounded-xl
-          shadow
-        "
-      >
+      <Card>
+        <CardHeader>
+          <CardTitle>Subject</CardTitle>
+          <CardDescription>Enter the subject name for this assessment.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Input
+            label="Subject"
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="e.g. Mathematics, Java Programming"
+          />
+        </CardContent>
+      </Card>
 
-        {students.map(student => (
-
-          <div
-            key={student.id}
-            className="
-              flex
-              justify-between
-              items-center
-              border-b
-              p-4
-            "
-          >
-
-            <div>
-
-              <h3
-                className="
-                  font-semibold
-                "
-              >
-                {student.name}
-              </h3>
-
-              <p
-                className="
-                  text-gray-500
-                "
-              >
-                {student.email}
-              </p>
-
+      {students.length === 0 ? (
+        <EmptyState
+          icon={Users2}
+          title="No students enrolled"
+          description="There are no students in this course to enter marks for."
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Score entry</CardTitle>
+            <CardDescription>Enter a score (0–100) for each student.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-slate-100">
+              {students.map((student) => (
+                <div
+                  key={student.id}
+                  className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-slate-50/70 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{student.name}</h3>
+                    <p className="text-sm text-slate-500">{student.email}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {scores[student.id] && (
+                      <Badge variant="brand">{scores[student.id]}%</Badge>
+                    )}
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={scores[student.id] || ""}
+                      onChange={(e) => handleScoreChange(student.id, e.target.value)}
+                      className="w-28"
+                      placeholder="Score"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={
-                scores[
-                  student.id
-                ] || ""
-              }
-              onChange={(e) =>
-                handleScoreChange(
-                  student.id,
-                  e.target.value
-                )
-              }
-              className="
-                border
-                rounded
-                p-2
-                w-24
-              "
-            />
-
-          </div>
-          
-
-        ))}
-
-      </div>
-
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

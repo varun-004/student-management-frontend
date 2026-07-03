@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
+import PageTransition from "../components/ui/PageTransition";
 
 const DashboardLayout = ({ children }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -39,7 +40,9 @@ const DashboardLayout = ({ children }) => {
           <Navbar onMenuClick={handleMenuToggle} />
 
           <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-            <div className="mx-auto max-w-7xl space-y-6">{children}</div>
+            <PageTransition className="mx-auto max-w-7xl space-y-6">
+              {children}
+            </PageTransition>
           </main>
         </div>
       </div>

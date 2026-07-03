@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 
 import { loginUser } from "../../services/authService";
 import useAuth from "../../auth/useAuth";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "../../components/ui";
 
 const Login = () => {
+  useDocumentTitle("Sign In");
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -38,7 +40,7 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.log(error);
-      toast.error("Login failed");
+      notify.error("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }

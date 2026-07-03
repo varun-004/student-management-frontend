@@ -1,10 +1,12 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
 
 import { createTeacher } from "../../services/adminTeacherService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from "../../components/ui";
 
 function AddTeacherPage() {
+  useDocumentTitle("Add Teacher");
   const [formData, setFormData] = useState({
     employeeId: "",
     firstName: "",
@@ -27,7 +29,7 @@ function AddTeacherPage() {
 
     try {
       await createTeacher(formData);
-      toast.success("Teacher added successfully");
+      notify.success("Teacher added successfully");
       setFormData({
         employeeId: "",
         firstName: "",
@@ -39,7 +41,7 @@ function AddTeacherPage() {
       });
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to add teacher");
+      notify.error(error.response?.data?.message || "Failed to add teacher");
     }
   };
 

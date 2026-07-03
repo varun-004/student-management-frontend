@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 
 import { addMarks } from "../../services/marksService";
 import { getAllCourses, getCourseById } from "../../services/courseService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
+import notify from "../../utils/toast";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader, Select } from "../../components/ui";
 
 const MarksEntryPage = () => {
+  useDocumentTitle("Marks Entry");
   const [formData, setFormData] = useState({
     subject: "",
     score: "",
@@ -66,7 +68,7 @@ const MarksEntryPage = () => {
         courseId: Number(formData.courseId),
       });
 
-      toast.success("Marks added successfully");
+      notify.success("Marks added successfully");
 
       setFormData({
         subject: "",
@@ -77,7 +79,7 @@ const MarksEntryPage = () => {
       setStudents([]);
     } catch (err) {
       console.error(err);
-      toast.error(err?.response?.data?.message || "Marks already exist");
+      notify.error(err?.response?.data?.message || "Marks already exist");
     } finally {
       setLoading(false);
     }
