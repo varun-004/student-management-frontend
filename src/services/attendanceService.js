@@ -97,3 +97,34 @@ export const exportAttendanceCsv =
 
     return response.data;
 };
+
+/*
+|--------------------------------------------------------------------------
+| GET ATTENDANCE BY DATE
+|--------------------------------------------------------------------------
+*/
+
+export const getAttendanceByDate = async (date) => {
+
+  const response = await api.get(
+    `/api/attendance/date/${date}`
+  );
+
+  return response.data;
+};
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE ATTENDANCE
+|--------------------------------------------------------------------------
+*/
+
+export const updateAttendance = async (attendanceData) => {
+
+  const response = await api.post(
+    "/api/attendance",
+    attendanceData
+  );
+
+  return response.data;
+};

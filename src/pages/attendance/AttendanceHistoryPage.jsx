@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
-import { Download, Search } from "lucide-react";
+import { Download, Search, Edit } from "lucide-react";
 
 import { getAllCourses } from "../../services/courseService";
-import { getAttendanceByCourse, exportAttendanceCsv } from "../../services/attendanceService";
+import {
+  getAttendanceByCourse,
+  exportAttendanceCsv,
+  updateAttendance,
+} from "../../services/attendanceService";
+
 import Table from "../../components/common/Table";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import notify from "../../utils/toast";
+
 import {
   Badge,
   Button,
@@ -23,35 +29,26 @@ import {
 
 const AttendanceHistoryPage = () => {
   useDocumentTitle("Attendance History");
+
   const [courses, setCourses] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("");
+
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  const [editingAttendance, setEditingAttendance] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
+
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
 
-  const handleExport = async () => {
-    if (!selectedCourse) {
-      notify.error("Please select a course first.");
-      return;
-    }
-
-    try {
-      const file = await exportAttendanceCsv(selectedCourse);
-      const url = window.URL.createObjectURL(file);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "attendance.csv";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      notify.success("CSV exported successfully");
-    } catch (error) {
-      console.error(error);
-      notify.error("Failed to export CSV");
-    }
-  };
+  // -------------------------
+  // Load Courses
+  // -------------------------
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -60,15 +57,21 @@ const AttendanceHistoryPage = () => {
         setCourses(data.content || []);
       } catch (err) {
         console.error(err);
+        notify.error("Failed to load courses");
       }
     };
 
     loadCourses();
   }, []);
 
+  // -------------------------
+  // Load Attendance
+  // -------------------------
+
   const handleCourseChange = async (courseId) => {
     try {
       setLoading(true);
+
       setSelectedCourse(courseId);
 
       if (!courseId) {
@@ -77,7 +80,13 @@ const AttendanceHistoryPage = () => {
       }
 
       const data = await getAttendanceByCourse(courseId);
-      setAttendance(data);
+
+      const filtered = data.filter(
+        (item) => item.attendanceDate === selectedDate
+      );
+
+      setAttendance(filtered);
+
       setError("");
     } catch (err) {
       console.error(err);
@@ -87,8 +96,47 @@ const AttendanceHistoryPage = () => {
     }
   };
 
+  // -------------------------
+  // Export CSV
+  // -------------------------
+
+  const handleExport = async () => {
+    if (!selectedCourse) {
+      notify.error("Please select a course first.");
+      return;
+    }
+
+    try {
+      const file = await exportAttendanceCsv(selectedCourse);
+
+      const url = window.URL.createObjectURL(file);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "attendance.csv";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      notify.success("CSV exported successfully");
+    } catch (err) {
+      console.error(err);
+      notify.error("Failed to export CSV");
+    }
+  };
+
+  // -------------------------
+  // Search Filter
+  // -------------------------
+
   const filteredAttendance = attendance.filter((record) =>
-    record.studentName?.toLowerCase().includes(searchTerm.toLowerCase()),
+    record.studentName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -96,7 +144,7 @@ const AttendanceHistoryPage = () => {
       <PageHeader
         eyebrow="Records"
         title="Attendance History"
-        description="Review attendance records and export them for reporting."
+        description="Review attendance records and export them."
       >
         <Button
           variant="outline"
@@ -108,88 +156,208 @@ const AttendanceHistoryPage = () => {
         </Button>
       </PageHeader>
 
+      {/* Filters */}
+
       <Card>
         <CardHeader>
           <CardTitle>Filters</CardTitle>
-          <CardDescription>Select a course and search by student name.</CardDescription>
+
+          <CardDescription>
+            Select course, date and search student.
+          </CardDescription>
         </CardHeader>
+
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+          <div className="grid gap-4 md:grid-cols-3">
             <Select
               label="Course"
               value={selectedCourse}
               onChange={(e) => handleCourseChange(e.target.value)}
             >
               <option value="">Select Course</option>
+
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.courseName}
                 </option>
               ))}
             </Select>
+
             <Input
-              type="text"
-              placeholder="Search student..."
+              label="Date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+
+                if (selectedCourse) {
+                  handleCourseChange(selectedCourse);
+                }
+              }}
+            />
+
+            <Input
+              label="Search Student"
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              leftIcon={Search}
             />
           </div>
         </CardContent>
       </Card>
 
+      {/* Error */}
+
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
           {error}
         </div>
       )}
 
+      {/* Loading */}
+
       {loading ? (
-        <TableSkeleton rows={6} cols={4} />
+        <TableSkeleton rows={6} cols={5} />
       ) : !selectedCourse ? (
         <EmptyState
           icon={Search}
-          title="Select a course"
-          description="Choose a course from the filter above to view attendance history."
+          title="Select a Course"
+          description="Choose a course to view attendance."
         />
       ) : filteredAttendance.length === 0 ? (
         <EmptyState
-          title="No attendance records found"
-          description={
-            searchTerm
-              ? "No records match your search."
-              : "No attendance has been recorded for this course yet."
-          }
+          title="No Attendance Found"
+          description="No attendance records available."
         />
       ) : (
         <Card>
           <CardContent className="p-0">
             <Table>
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              <thead className="bg-slate-50">
                 <tr>
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Course</th>
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+
+              <tbody className="divide-y">
                 {filteredAttendance.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50/70">
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                  <tr key={record.id}>
+                    <td className="px-4 py-3 font-medium">
                       {record.studentName}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{record.courseName}</td>
-                    <td className="px-4 py-3 text-slate-600">{record.attendanceDate}</td>
+
+                    <td className="px-4 py-3">{record.courseName}</td>
+
                     <td className="px-4 py-3">
-                      <Badge variant={record.present ? "success" : "danger"}>
+                      {record.attendanceDate}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={record.present ? "success" : "danger"}
+                      >
                         {record.present ? "Present" : "Absent"}
                       </Badge>
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        leftIcon={Edit}
+                        onClick={() => setEditingAttendance(record)}
+                      >
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Attendance */}
+
+      {editingAttendance && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Attendance</CardTitle>
+
+            <CardDescription>
+              Update attendance status for the selected student.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant={
+                  editingAttendance.present ? "success" : "outline"
+                }
+                onClick={() =>
+                  setEditingAttendance({
+                    ...editingAttendance,
+                    present: true,
+                  })
+                }
+              >
+                Present
+              </Button>
+
+              <Button
+                variant={
+                  editingAttendance.present === false
+                    ? "danger"
+                    : "outline"
+                }
+                onClick={() =>
+                  setEditingAttendance({
+                    ...editingAttendance,
+                    present: false,
+                  })
+                }
+              >
+                Absent
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  try {
+                    await updateAttendance({
+                      studentId: editingAttendance.studentId,
+                      courseId: editingAttendance.courseId,
+                      attendanceDate:
+                        editingAttendance.attendanceDate,
+                      present: editingAttendance.present,
+                    });
+
+                    notify.success("Attendance Updated");
+
+                    setEditingAttendance(null);
+
+                    handleCourseChange(selectedCourse);
+                  } catch (err) {
+                    console.error(err);
+                    notify.error("Failed to update attendance");
+                  }
+                }}
+              >
+                Update
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setEditingAttendance(null)}
+              >
+                Cancel
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

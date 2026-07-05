@@ -5,6 +5,7 @@ import { getAllCourses, getCourseById } from "../../services/courseService";
 import { markAttendance } from "../../services/attendanceService";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import notify from "../../utils/toast";
+
 import {
   Button,
   Card,
@@ -26,6 +27,11 @@ const AttendanceMarkPage = () => {
   const [students, setStudents] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [attendanceDate, setAttendanceDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+
+  const [attendanceData, setAttendanceData] = useState({});
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -61,17 +67,43 @@ const AttendanceMarkPage = () => {
     }
   };
 
-  const handleAttendance = async (studentId, present) => {
+  const handleAttendance = (studentId, present) => {
+    setAttendanceData((prev) => ({
+      ...prev,
+      [studentId]: present,
+    }));
+  };
+
+  const handleSaveAttendance = async () => {
+    if (!selectedCourse) {
+      notify.error("Please select a course.");
+      return;
+    }
+
+    if (Object.keys(attendanceData).length === 0) {
+      notify.error("Please mark attendance before saving.");
+      return;
+    }
+
     try {
-      await markAttendance({
-        studentId,
-        courseId: selectedCourse,
-        present,
-      });
+      for (const student of students) {
+        await markAttendance({
+          studentId: student.id,
+          courseId: selectedCourse,
+          attendanceDate,
+          present: attendanceData[student.id] ?? false,
+        });
+      }
+
       notify.success("Attendance saved successfully");
+
+      setAttendanceData({});
     } catch (error) {
       console.error(error);
-      notify.error(error?.response?.data?.message || "Attendance already marked");
+
+      notify.error(
+        error?.response?.data?.message || "Failed to save attendance",
+      );
     }
   };
 
@@ -97,23 +129,43 @@ const AttendanceMarkPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>Select course</CardTitle>
-          <CardDescription>Choose the course to mark attendance for.</CardDescription>
+          <CardDescription>
+            Choose the course to mark attendance for.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Select
             label="Course"
             value={selectedCourse}
             onChange={(e) => handleCourseChange(e.target.value)}
           >
             <option value="">Select Course</option>
+
             {courses.map((course) => (
               <option key={course.id} value={course.id}>
                 {course.courseName}
               </option>
             ))}
           </Select>
+
+          <label className="block text-sm font-medium text-slate-700">
+            Attendance Date
+          </label>
+
+          <input
+            type="date"
+            value={attendanceDate}
+            onChange={(e) => setAttendanceDate(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+          />
         </CardContent>
       </Card>
+
+      <div className="flex justify-end mt-6">
+        <Button onClick={handleSaveAttendance} disabled={students.length === 0}>
+          Save Attendance
+        </Button>
+      </div>
 
       {loadingStudents ? (
         <ListSkeleton rows={6} />
@@ -132,7 +184,8 @@ const AttendanceMarkPage = () => {
           <CardHeader>
             <CardTitle>Student list</CardTitle>
             <CardDescription>
-              {students.length} student{students.length !== 1 ? "s" : ""} enrolled
+              {students.length} student{students.length !== 1 ? "s" : ""}{" "}
+              enrolled
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -143,12 +196,18 @@ const AttendanceMarkPage = () => {
                   className="flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-slate-50/70 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
-                    <h3 className="font-semibold text-slate-900">{student.name}</h3>
+                    <h3 className="font-semibold text-slate-900">
+                      {student.name}
+                    </h3>
                     <p className="text-sm text-slate-500">{student.email}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant={
+                        attendanceData[student.id] === true
+                          ? "success"
+                          : "outline"
+                      }
                       size="sm"
                       leftIcon={CheckCircle2}
                       onClick={() => handleAttendance(student.id, true)}
@@ -156,7 +215,11 @@ const AttendanceMarkPage = () => {
                       Present
                     </Button>
                     <Button
-                      variant="danger"
+                      variant={
+                        attendanceData[student.id] === false
+                          ? "danger"
+                          : "outline"
+                      }
                       size="sm"
                       leftIcon={XCircle}
                       onClick={() => handleAttendance(student.id, false)}

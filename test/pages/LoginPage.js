@@ -17,9 +17,8 @@ export class LoginPage {
     await this.email.fill(email);
     await this.password.fill(password);
     await this.loginButton.click();
-  }
 
-  async verifyLogin() {
+    // Verify successful login
     await expect(this.page).toHaveURL(/dashboard/);
   }
 }

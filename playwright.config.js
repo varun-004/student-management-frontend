@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./test",
 
+  workers: 1,
+
   fullyParallel: false,
 
   retries: 1,
