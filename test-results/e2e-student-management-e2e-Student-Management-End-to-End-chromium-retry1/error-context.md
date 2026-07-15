@@ -12,33 +12,82 @@
 # Error details
 
 ```
-Error: locator.click: Target page, context or browser has been closed
-Call log:
-  - waiting for getByRole('link', { name: 'Mark Attendance' })
-    - locator resolved to <a data-discover="true" href="/attendance/mark" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 text-slate-300 hover:bg-white/10 hover:text-white">…</a>
-  - attempting click action
-    2 × waiting for element to be visible, enabled and stable
-      - element is visible, enabled and stable
-      - scrolling into view if needed
-      - done scrolling
-      - <div class="fixed inset-0 bg-black/50 flex items-center justify-center">…</div> from <div class="flex flex-1 flex-col overflow-hidden">…</div> subtree intercepts pointer events
-    - retrying click action
-    - waiting 20ms
-    2 × waiting for element to be visible, enabled and stable
-      - element is visible, enabled and stable
-      - scrolling into view if needed
-      - done scrolling
-      - <div class="fixed inset-0 bg-black/50 flex items-center justify-center">…</div> from <div class="flex flex-1 flex-col overflow-hidden">…</div> subtree intercepts pointer events
-    - retrying click action
-      - waiting 100ms
-    23 × waiting for element to be visible, enabled and stable
-       - element is visible, enabled and stable
-       - scrolling into view if needed
-       - done scrolling
-       - <div class="fixed inset-0 bg-black/50 flex items-center justify-center">…</div> from <div class="flex flex-1 flex-col overflow-hidden">…</div> subtree intercepts pointer events
-     - retrying click action
-       - waiting 500ms
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('table')
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('table')
+
+```
+
+```yaml
+- complementary:
+  - paragraph: SMS
+  - paragraph: Student Management
+  - link "Dashboard":
+    - /url: /dashboard
+  - paragraph: Administration
+  - link "Courses":
+    - /url: /courses
+  - link "Mark Attendance":
+    - /url: /attendance/mark
+  - link "Attendance History":
+    - /url: /attendance/history
+  - link "Attendance Report":
+    - /url: /attendance/report
+  - link "Marks Entry":
+    - /url: /marks/entry
+  - link "Marks Report":
+    - /url: /marks/report
+  - link "Top Performers":
+    - /url: /marks/top-performers
+  - link "Student Risk Analytics":
+    - /url: /analytics/risk
+  - link "Teachers":
+    - /url: /admin/teachers
+  - text: A
+  - paragraph: admin1@gmail.com
+  - paragraph: ADMIN
+  - button "Logout"
+- banner:
+  - heading "Attendance History" [level=1]
+  - paragraph: Review attendance history
+  - button "Notifications"
+  - text: A
+  - paragraph: admin1@gmail.com
+  - paragraph: ADMIN
+- main:
+  - paragraph: Records
+  - heading "Attendance History" [level=1]
+  - paragraph: Review attendance records and export them.
+  - button "Export CSV" [disabled]
+  - heading "Filters" [level=3]
+  - paragraph: Select course, date and search student.
+  - text: Course
+  - combobox:
+    - option "Select Course" [selected]
+    - option "Data Structures Algorthim"
+    - option "Database Management System"
+    - option "C programming"
+    - option "Java Object Oriented Programming"
+    - option "Software Engineering"
+    - option "Software Engineering 1783233942116"
+    - option "Software Engineering 1783234964795"
+    - option "Software Engineering 1783235173441"
+    - option "Software Engineering 1783235324310"
+    - option "Software Engineering 1783235328370"
+  - text: Date
+  - textbox: 2026-07-06
+  - text: Search Student
+  - textbox "Search..."
+  - heading "Select a Course" [level=3]
+  - paragraph: Choose a course to view attendance.
+- status: Attendance saved successfully
 ```
 
 # Test source
@@ -46,78 +95,76 @@ Call log:
 ```ts
   1  | import { expect } from "@playwright/test";
   2  | 
-  3  | export class DashboardPage {
+  3  | export class AttendancePage {
   4  |   constructor(page) {
   5  |     this.page = page;
   6  | 
-  7  |     this.dashboardLink = page.getByRole("link", { name: "Dashboard" });
-  8  | 
-  9  |     this.coursesLink = page.getByRole("link", { name: "Courses" });
-  10 |     this.markAttendanceLink = page.getByRole("link", { name: "Mark Attendance" });
-  11 |     this.attendanceHistoryLink = page.getByRole("link", { name: "Attendance History" });
-  12 |     this.attendanceReportLink = page.getByRole("link", { name: "Attendance Report" });
-  13 | 
-  14 |     this.marksEntryLink = page.getByRole("link", { name: "Marks Entry" });
-  15 |     this.marksReportLink = page.getByRole("link", { name: "Marks Report" });
-  16 |     this.topPerformersLink = page.getByRole("link", { name: "Top Performers" });
-  17 | 
-  18 |     this.analyticsLink = page.getByRole("link", {
-  19 |       name: "Student Risk Analytics",
-  20 |     });
-  21 | 
-  22 |     this.teachersLink = page.getByRole("link", {
-  23 |       name: "Teachers",
-  24 |     });
-  25 | 
-  26 |     this.logoutButton = page.getByRole("button", {
-  27 |       name: /logout/i,
-  28 |     });
-  29 |   }
+  7  |     // Mark Attendance
+  8  |     this.courseDropdown = page.getByRole("combobox");
+  9  |     this.presentButtons = page.getByRole("button", { name: "Present" });
+  10 |     this.absentButtons = page.getByRole("button", { name: "Absent" });
+  11 |     this.saveButton = page.getByRole("button", { name: "Save Attendance" });
+  12 | 
+  13 |     // Attendance History
+  14 |     this.searchBox = page.getByPlaceholder("Search student...");
+  15 |     this.exportButton = page.getByRole("button", {
+  16 |       name: "Export CSV",
+  17 |     });
+  18 | 
+  19 |     this.dateInput = page.locator('input[type="date"]');
+  20 | 
+  21 |     this.historyTable = page.locator("table");
+  22 |   }
+  23 | 
+  24 |   // ----------------------------
+  25 |   // Mark Attendance
+  26 |   // ----------------------------
+  27 | 
+  28 |   async markAttendance(courseId = "5") {
+  29 |     await this.courseDropdown.selectOption(courseId);
   30 | 
-  31 |   async verifyDashboardLoaded() {
-  32 |     await expect(this.page).toHaveURL(/dashboard/);
-  33 |     await expect(this.dashboardLink).toBeVisible();
-  34 |   }
-  35 | 
-  36 |   async openCourses() {
-  37 |     await this.coursesLink.click();
-  38 |   }
-  39 | 
-  40 |   async openTeachers() {
-  41 |     await this.teachersLink.click();
-  42 |   }
-  43 | 
-  44 |   async openMarkAttendance() {
-> 45 |     await this.markAttendanceLink.click();
-     |                                   ^ Error: locator.click: Target page, context or browser has been closed
-  46 |   }
-  47 | 
-  48 |   async openAttendanceHistory() {
-  49 |     await this.attendanceHistoryLink.click();
-  50 |   }
-  51 | 
-  52 |   async openAttendanceReport() {
-  53 |     await this.attendanceReportLink.click();
-  54 |   }
-  55 | 
-  56 |   async openMarksEntry() {
-  57 |     await this.marksEntryLink.click();
-  58 |   }
-  59 | 
-  60 |   async openMarksReport() {
-  61 |     await this.marksReportLink.click();
-  62 |   }
-  63 | 
-  64 |   async openTopPerformers() {
-  65 |     await this.topPerformersLink.click();
-  66 |   }
-  67 | 
-  68 |   async openAnalytics() {
-  69 |     await this.analyticsLink.click();
-  70 |   }
-  71 | 
-  72 |   async logout() {
-  73 |     await this.logoutButton.click();
-  74 |   }
-  75 | }
+  31 |     await this.presentButtons.first().click();
+  32 |     await this.presentButtons.nth(1).click();
+  33 | 
+  34 |     if (await this.saveButton.isVisible().catch(() => false)) {
+  35 |       await this.saveButton.click();
+  36 |     }
+  37 |   }
+  38 | 
+  39 |   // ----------------------------
+  40 |   // Attendance History
+  41 |   // ----------------------------
+  42 | 
+  43 |   async openHistory() {
+  44 |     await this.page.getByRole("link", {
+  45 |       name: "Attendance History",
+  46 |     }).click();
+  47 |   }
+  48 | 
+  49 |   async selectCourse(courseId) {
+  50 |     await this.courseDropdown.selectOption(courseId);
+  51 |   }
+  52 | 
+  53 |   async selectDate(date) {
+  54 |     await this.dateInput.fill(date);
+  55 |   }
+  56 | 
+  57 |   async searchStudent(studentName) {
+  58 |     await this.searchBox.fill(studentName);
+  59 |   }
+  60 | 
+  61 |   async verifyHistoryLoaded() {
+> 62 |     await expect(this.historyTable).toBeVisible();
+     |                                     ^ Error: expect(locator).toBeVisible() failed
+  63 |   }
+  64 | 
+  65 |   async exportCsv() {
+  66 |     const downloadPromise =
+  67 |       this.page.waitForEvent("download");
+  68 | 
+  69 |     await this.exportButton.click();
+  70 | 
+  71 |     await downloadPromise;
+  72 |   }
+  73 | }
 ```

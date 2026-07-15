@@ -1,5 +1,4 @@
-import { test } from "@playwright/test";
-
+import { test, expect } from "@playwright/test";
 import { RegisterPage } from "../pages/RegisterPage";
 import { LoginPage } from "../pages/LoginPage";
 import { DashboardPage } from "../pages/DashboardPage";
@@ -30,7 +29,7 @@ await dashboard.openCourses();
 
 // Create Course
 const course = new CoursePage(page);
-const createdCourse = await course.createCourse();
+await course.createCourse();
 
 // Enroll Student
 const enrollment = new EnrollmentPage(page);
@@ -41,4 +40,13 @@ const attendance = new AttendancePage(page);
 await dashboard.openMarkAttendance();
 
 await attendance.markAttendance();
+await attendance.openHistory();
+
+await attendance.selectCourse("5");
+await expect(attendance.historyTable).toBeVisible();
+await attendance.verifyHistoryLoaded();
+
+await attendance.searchStudent(student.name);
+
+await attendance.exportCsv();
 });
