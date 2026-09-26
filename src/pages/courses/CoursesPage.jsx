@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Plus, Search } from "lucide-react";
 
 import { getAllCourses, createCourse } from "../../services/courseService";
+import useAuth from "../../auth/useAuth";
 import CourseCard from "../../components/courses/CourseCard";
 import CourseForm from "../../components/courses/CourseForm";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
@@ -18,6 +19,7 @@ import {
 
 const CoursesPage = () => {
   useDocumentTitle("Courses");
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -81,9 +83,11 @@ const CoursesPage = () => {
         title="Courses Management"
         description="Browse, search, and manage your institution's course catalog."
       >
-        <Button leftIcon={Plus} onClick={() => setIsModalOpen(true)}>
-          Add Course
-        </Button>
+        {user?.role === "ADMIN" && (
+          <Button leftIcon={Plus} onClick={() => setIsModalOpen(true)}>
+            Add Course
+          </Button>
+        )}
       </PageHeader>
 
       {!loading && (
@@ -129,7 +133,7 @@ const CoursesPage = () => {
               : "Create your first course to get started."
           }
           action={
-            !searchTerm ? (
+            !searchTerm && user?.role === "ADMIN" ? (
               <Button leftIcon={Plus} onClick={() => setIsModalOpen(true)}>
                 Add Course
               </Button>

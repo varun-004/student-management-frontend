@@ -11,6 +11,7 @@ import EnrollStudentModal from "../../components/courses/EnrollStudentsModal";
 import ConfirmModal from "../../components/common/ConfirmModal";
 import Table from "../../components/common/Table";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
+import useAuth from "../../auth/useAuth";
 import notify from "../../utils/toast";
 import {
   Badge,
@@ -29,6 +30,7 @@ import {
 
 const CourseDetailsPage = () => {
   useDocumentTitle("Course Details");
+  const { user } = useAuth();
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,9 +160,11 @@ const CourseDetailsPage = () => {
         title={course.courseName}
         description={course.description || "Course overview and enrolled students."}
       >
-        <Button leftIcon={UserPlus} onClick={() => setIsEnrollModalOpen(true)}>
-          Enroll Student
-        </Button>
+        {user?.role === "ADMIN" && (
+          <Button leftIcon={UserPlus} onClick={() => setIsEnrollModalOpen(true)}>
+            Enroll Student
+          </Button>
+        )}
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -220,7 +224,7 @@ const CourseDetailsPage = () => {
                     : "Enroll students to build this course roster."
                 }
                 action={
-                  !searchTerm ? (
+                  !searchTerm && user?.role === "ADMIN" ? (
                     <Button leftIcon={UserPlus} onClick={() => setIsEnrollModalOpen(true)}>
                       Enroll Student
                     </Button>
@@ -250,9 +254,11 @@ const CourseDetailsPage = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
-                        <Button variant="danger" size="sm" onClick={() => setRemoveTarget(student)}>
-                          Remove
-                        </Button>
+                        {user?.role === "ADMIN" && (
+                          <Button variant="danger" size="sm" onClick={() => setRemoveTarget(student)}>
+                            Remove
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

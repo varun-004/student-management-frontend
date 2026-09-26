@@ -54,6 +54,7 @@ const Sidebar = ({ onClose }) => {
     { to: "/marks/top-performers", label: "Top Performers", icon: Sparkles },
     { to: "/analytics/risk", label: "Student Risk Analytics", icon: BarChart3 },
     { to: "/admin/teachers", label: "Teachers", icon: Users2 },
+    { to: "/admin/students", label: "Students", icon: GraduationCap },
   ];
 
   const studentItems = [

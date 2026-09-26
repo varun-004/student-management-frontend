@@ -37,8 +37,11 @@ import TeacherDashboard
 from "../pages/teacher/TeacherDashboard";
 
 import AddTeacherPage from "../pages/admin/AddTeacherPage";
-import EditTeacherPage
-from "../pages/admin/EditTeacherPage";
+import EditTeacherPage from "../pages/admin/EditTeacherPage";
+
+import StudentsPage from "../pages/admin/StudentsPage";
+import AddStudentPage from "../pages/admin/AddStudentPage";
+import EditStudentPage from "../pages/admin/EditStudentPage";
 
 
 const AppRoutes = () => {
@@ -254,6 +257,45 @@ const AppRoutes = () => {
       >
         <DashboardLayout>
           <TeachersPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/students"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute allowedRoles={["ADMIN"]}>
+        <DashboardLayout>
+          <StudentsPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/students/add"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute allowedRoles={["ADMIN"]}>
+        <DashboardLayout>
+          <AddStudentPage />
+        </DashboardLayout>
+      </RoleProtectedRoute>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/students/edit/:id"
+  element={
+    <ProtectedRoute>
+      <RoleProtectedRoute allowedRoles={["ADMIN"]}>
+        <DashboardLayout>
+          <EditStudentPage />
         </DashboardLayout>
       </RoleProtectedRoute>
     </ProtectedRoute>
