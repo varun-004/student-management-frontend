@@ -25,6 +25,7 @@ import StudentMarksReportPage from "../pages/marks/StudentMarksReportPage.jsx";
 import TopPerformersPage from "../pages/marks/TopPerformersPage";
 
 import StudentRiskPage from "../pages/analytics/StudentRiskPage";
+import AIIntelligenceDashboard from "../pages/student/AIIntelligenceDashboard";
 
 import TeacherAnalytics from "../pages/teacher/TeacherAnalytics";
 import TeacherCourses from "../pages/teacher/TeacherCourses";
@@ -178,6 +179,17 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <DashboardLayout>
                 <StudentRiskPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/ai-insights"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <AIIntelligenceDashboard />
               </DashboardLayout>
             </ProtectedRoute>
           }

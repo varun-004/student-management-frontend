@@ -9,6 +9,7 @@ import {
   LogOut,
   Sparkles,
   Users2,
+  BrainCircuit,
 } from "lucide-react";
 
 import useAuth from "../../auth/useAuth";
@@ -60,6 +61,7 @@ const Sidebar = ({ onClose }) => {
   const studentItems = [
     { to: "/attendance/report", label: "My Attendance", icon: ClipboardList },
     { to: "/marks/report", label: "My Marks", icon: GraduationCap },
+    { to: "/student/ai-insights", label: "AI Intelligence", icon: BrainCircuit },
   ];
 
   const teacherItems = [
