@@ -19,6 +19,19 @@ export const addMarks = async (
   return response.data;
 };
 
+export const addMarksBulk = async (
+  marksList
+) => {
+
+  const response =
+    await api.post(
+      "/api/marks/bulk",
+      marksList
+    );
+
+  return response.data;
+};
+
 /*
 |--------------------------------------------------------------------------
 | STUDENT MARKS

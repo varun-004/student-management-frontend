@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { getAllCourses, getCourseById } from "../../services/courseService";
-import { markAttendance } from "../../services/attendanceService";
+import { markAttendanceBulk } from "../../services/attendanceService";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import notify from "../../utils/toast";
 
@@ -33,6 +33,9 @@ const AttendanceMarkPage = () => {
 
   const [attendanceData, setAttendanceData] = useState({});
 
+
+
+  
   useEffect(() => {
     const loadCourses = async () => {
       try {
@@ -86,14 +89,14 @@ const AttendanceMarkPage = () => {
     }
 
     try {
-      for (const student of students) {
-        await markAttendance({
-          studentId: student.id,
-          courseId: selectedCourse,
-          attendanceDate,
-          present: attendanceData[student.id] ?? false,
-        });
-      }
+      const bulkPayload = students.map((student) => ({
+        studentId: student.id,
+        courseId: Number(selectedCourse),
+        attendanceDate,
+        present: attendanceData[student.id] ?? false,
+      }));
+
+      await markAttendanceBulk(bulkPayload);
 
       notify.success("Attendance saved successfully");
 

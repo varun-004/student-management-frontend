@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CheckCircle2, Save, Users2, XCircle } from "lucide-react";
 
-import { getCourseStudents, markAttendance } from "../../services/teacherService";
+import { getCourseStudents } from "../../services/teacherService";
+import { markAttendanceBulk } from "../../services/attendanceService";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import notify from "../../utils/toast";
 import {
@@ -70,14 +71,13 @@ function TeacherAttendance() {
   const handleSaveAttendance = async () => {
     try {
       setSaving(true);
-      for (const student of students) {
-        await markAttendance({
-          studentId: student.id,
-          courseId: Number(courseId),
-          attendanceDate,
-          present: attendanceData[student.id] || false,
-        });
-      }
+      const bulkPayload = students.map((student) => ({
+        studentId: student.id,
+        courseId: Number(courseId),
+        attendanceDate,
+        present: attendanceData[student.id] || false,
+      }));
+      await markAttendanceBulk(bulkPayload);
       notify.success("Attendance saved successfully");
     } catch (error) {
       console.error(error);

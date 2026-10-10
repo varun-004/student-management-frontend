@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Download, Search, Edit } from "lucide-react";
 
 import { getAllCourses } from "../../services/courseService";
@@ -30,9 +31,11 @@ import {
 const AttendanceHistoryPage = () => {
   useDocumentTitle("Attendance History");
 
+  const { courseId: routeCourseId } = useParams();
+
   const [courses, setCourses] = useState([]);
   const [attendance, setAttendance] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState(routeCourseId || "");
 
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -65,10 +68,21 @@ const AttendanceHistoryPage = () => {
   }, []);
 
   // -------------------------
+  // Auto-select course from route
+  // -------------------------
+
+  useEffect(() => {
+    if (routeCourseId) {
+      setSelectedCourse(routeCourseId);
+      handleCourseChange(routeCourseId, selectedDate);
+    }
+  }, [routeCourseId]);
+
+  // -------------------------
   // Load Attendance
   // -------------------------
 
-  const handleCourseChange = async (courseId) => {
+  const handleCourseChange = async (courseId, targetDate = selectedDate) => {
     try {
       setLoading(true);
 
@@ -82,7 +96,7 @@ const AttendanceHistoryPage = () => {
       const data = await getAttendanceByCourse(courseId);
 
       const filtered = data.filter(
-        (item) => item.attendanceDate === selectedDate
+        (item) => item.attendanceDate === targetDate
       );
 
       setAttendance(filtered);
@@ -173,8 +187,18 @@ const AttendanceHistoryPage = () => {
               label="Course"
               value={selectedCourse}
               onChange={(e) => handleCourseChange(e.target.value)}
+              disabled={Boolean(routeCourseId)}
             >
               <option value="">Select Course</option>
+
+              {routeCourseId &&
+                !courses.some(
+                  (c) => String(c.id) === String(routeCourseId)
+                ) && (
+                  <option value={routeCourseId}>
+                    Course #{routeCourseId}
+                  </option>
+                )}
 
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
@@ -188,10 +212,11 @@ const AttendanceHistoryPage = () => {
               type="date"
               value={selectedDate}
               onChange={(e) => {
-                setSelectedDate(e.target.value);
+                const newDate = e.target.value;
+                setSelectedDate(newDate);
 
                 if (selectedCourse) {
-                  handleCourseChange(selectedCourse);
+                  handleCourseChange(selectedCourse, newDate);
                 }
               }}
             />

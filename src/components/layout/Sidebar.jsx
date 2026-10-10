@@ -10,6 +10,7 @@ import {
   Sparkles,
   Users2,
   BrainCircuit,
+  FileBarChart2,
 } from "lucide-react";
 
 import useAuth from "../../auth/useAuth";
@@ -47,15 +48,10 @@ const Sidebar = ({ onClose }) => {
 
   const adminItems = [
     { to: "/courses", label: "Courses", icon: BookOpen },
-    { to: "/attendance/mark", label: "Mark Attendance", icon: CalendarCheck2 },
-    { to: "/attendance/history", label: "Attendance History", icon: ClipboardList },
-    { to: "/attendance/report", label: "Attendance Report", icon: ClipboardList },
-    { to: "/marks/entry", label: "Marks Entry", icon: GraduationCap },
-    { to: "/marks/report", label: "Marks Report", icon: GraduationCap },
+    { to: "/admin/students", label: "Students", icon: GraduationCap },
+    { to: "/admin/teachers", label: "Teachers", icon: Users2 },
     { to: "/marks/top-performers", label: "Top Performers", icon: Sparkles },
     { to: "/analytics/risk", label: "Student Risk Analytics", icon: BarChart3 },
-    { to: "/admin/teachers", label: "Teachers", icon: Users2 },
-    { to: "/admin/students", label: "Students", icon: GraduationCap },
   ];
 
   const studentItems = [
@@ -65,6 +61,7 @@ const Sidebar = ({ onClose }) => {
   ];
 
   const teacherItems = [
+    { to: "/teacher/dashboard", label: "Teacher Dashboard", icon: LayoutDashboard },
     { to: "/teacher/courses", label: "My Courses", icon: BookOpen },
     { to: "/attendance/mark", label: "Mark Attendance", icon: CalendarCheck2 },
     { to: "/marks/entry", label: "Enter Marks", icon: GraduationCap },
@@ -78,8 +75,8 @@ const Sidebar = ({ onClose }) => {
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-lg font-semibold tracking-tight">SMS</p>
-            <p className="text-sm text-slate-400">Student Management</p>
+            <p className="text-lg font-semibold tracking-tight">Campus 360</p>
+            <p className="text-sm text-slate-400">Academic Platform</p>
           </div>
         </div>
       </div>

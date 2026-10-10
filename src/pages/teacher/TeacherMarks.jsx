@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { GraduationCap, Save, Users2 } from "lucide-react";
 
-import { getCourseStudents, addMarks } from "../../services/teacherService";
+import { getCourseStudents, addMarksBulk } from "../../services/teacherService";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import notify from "../../utils/toast";
 import {
@@ -65,16 +65,28 @@ function TeacherMarks() {
   };
 
   const handleSaveMarks = async () => {
+    if (!subject.trim()) {
+      notify.error("Please enter a subject name.");
+      return;
+    }
+
+    const marksToSave = students
+      .filter((s) => scores[s.id] !== "" && scores[s.id] != null)
+      .map((s) => ({
+        studentId: s.id,
+        courseId: Number(courseId),
+        subject,
+        score: Number(scores[s.id]),
+      }));
+
+    if (marksToSave.length === 0) {
+      notify.error("Please enter at least one score before saving.");
+      return;
+    }
+
     try {
       setSaving(true);
-      for (const student of students) {
-        await addMarks({
-          studentId: student.id,
-          courseId: Number(courseId),
-          subject,
-          score: Number(scores[student.id] || 0),
-        });
-      }
+      await addMarksBulk(marksToSave);
       notify.success("Marks saved successfully");
     } catch (error) {
       console.error(error);

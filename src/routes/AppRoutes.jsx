@@ -111,9 +111,11 @@ const AppRoutes = () => {
           path="/attendance/mark"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <AttendanceMarkPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+                <DashboardLayout>
+                  <AttendanceMarkPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -122,9 +124,11 @@ const AppRoutes = () => {
           path="/attendance/history"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <AttendanceHistoryPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+                <DashboardLayout>
+                  <AttendanceHistoryPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -133,9 +137,11 @@ const AppRoutes = () => {
           path="/attendance/report"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <AttendanceReportPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+                <DashboardLayout>
+                  <AttendanceReportPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -144,9 +150,11 @@ const AppRoutes = () => {
           path="/marks/entry"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <MarksEntryPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+                <DashboardLayout>
+                  <MarksEntryPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -155,9 +163,11 @@ const AppRoutes = () => {
           path="/marks/report"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <StudentMarksReportPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+                <DashboardLayout>
+                  <StudentMarksReportPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -166,9 +176,11 @@ const AppRoutes = () => {
           path="/marks/top-performers"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <TopPerformersPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+                <DashboardLayout>
+                  <TopPerformersPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -177,9 +189,11 @@ const AppRoutes = () => {
           path="/analytics/risk"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <StudentRiskPage />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+                <DashboardLayout>
+                  <StudentRiskPage />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -188,9 +202,11 @@ const AppRoutes = () => {
           path="/student/ai-insights"
           element={
             <ProtectedRoute>
-              <DashboardLayout>
-                <AIIntelligenceDashboard />
-              </DashboardLayout>
+              <RoleProtectedRoute allowedRoles={["STUDENT"]}>
+                <DashboardLayout>
+                  <AIIntelligenceDashboard />
+                </DashboardLayout>
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />

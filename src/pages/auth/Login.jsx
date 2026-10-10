@@ -51,7 +51,7 @@ const Login = () => {
       <Card className="w-full max-w-md border-slate-200/80 shadow-xl">
         <CardHeader className="px-8 pt-8">
           <CardTitle className="text-center text-2xl">Welcome back</CardTitle>
-          <p className="text-center text-sm text-slate-500">Sign in to continue managing your school workspace.</p>
+          <p className="text-center text-sm text-slate-500">Sign in to continue to Campus 360.</p>
         </CardHeader>
         <CardContent className="px-8 pb-8">
           <form onSubmit={handleSubmit} className="space-y-4">

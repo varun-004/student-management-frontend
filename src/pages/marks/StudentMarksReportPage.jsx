@@ -50,23 +50,51 @@ const StudentMarksReportPage = () => {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [studentId, setStudentId] = useState(null);
+  const [studentName, setStudentName] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadMarks = async () => {
       try {
+        setError(null);
         const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.email) {
+          setError("Not authenticated. Please log in again.");
+          return;
+        }
+
+        // Admins and teachers might not have a student profile
+        if (user.role === "ADMIN") {
+          setError("Marks report is available for students only.");
+          setLoading(false);
+          return;
+        }
+
         const student = await getStudentByEmail(user.email);
         setStudentId(student.id);
+        setStudentName(student.name);
 
-        const marksData = await getStudentMarks(student.id);
-        const averageData = await getStudentAverage(student.id);
-        const gpaData = await getStudentGPA(student.id);
+        const [marksData, averageData, gpaData] = await Promise.all([
+          getStudentMarks(student.id),
+          getStudentAverage(student.id),
+          getStudentGPA(student.id),
+        ]);
 
-        setMarks(marksData || []);
-        setAverage(averageData);
-        setGpa(gpaData);
-      } catch (error) {
-        console.error(error);
+        setMarks(Array.isArray(marksData) ? marksData : []);
+        setAverage(typeof averageData === "number" ? averageData : null);
+        setGpa(typeof gpaData === "number" ? gpaData : null);
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 401) {
+          setError("Session expired. Please log in again.");
+        } else if (status === 403) {
+          setError("You do not have permission to view this report.");
+        } else if (status === 404) {
+          setError("Student profile not found for your account.");
+        } else {
+          setError("Failed to load marks data. Please try again.");
+        }
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -76,21 +104,30 @@ const StudentMarksReportPage = () => {
   }, []);
 
   const handleDownloadReport = async () => {
+    if (!studentId) {
+      notify.error("Student ID not available. Please reload the page.");
+      return;
+    }
     try {
       setDownloading(true);
-      const pdf = await downloadStudentReport(studentId);
-      const url = window.URL.createObjectURL(new Blob([pdf]));
+      // downloadStudentReport returns response.data which is a Blob (responseType: "blob")
+      const blob = await downloadStudentReport(studentId);
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: "application/pdf" })
+      );
       const link = document.createElement("a");
       link.href = url;
-      link.download = "Student_Report.pdf";
+      link.download = studentName
+        ? `${studentName.replace(/\s+/g, "-")}-report-card.pdf`
+        : "student-report-card.pdf";
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
       notify.success("Report card downloaded successfully");
-    } catch (error) {
-      console.error(error);
-      notify.error("Failed to download report card");
+    } catch (err) {
+      console.error(err);
+      notify.error("Failed to download report card. Please try again.");
     } finally {
       setDownloading(false);
     }
@@ -115,6 +152,23 @@ const StudentMarksReportPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="My records"
+          title="Marks Report"
+          description="View your academic performance, GPA summary, and download your report card."
+        />
+        <EmptyState
+          icon={GraduationCap}
+          title="Unable to load marks"
+          description={error}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -126,12 +180,13 @@ const StudentMarksReportPage = () => {
           leftIcon={Download}
           onClick={handleDownloadReport}
           loading={downloading}
+          disabled={!studentId}
         >
           Download Report Card
         </Button>
       </PageHeader>
 
-      {marks.length > 0 && (
+      {(studentName || marks.length > 0) && (
         <Card>
           <CardContent className="flex items-center gap-4 py-5">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-1 ring-brand-100">
@@ -140,18 +195,18 @@ const StudentMarksReportPage = () => {
             <div>
               <p className="text-sm font-medium text-slate-500">Student</p>
               <p className="text-lg font-semibold text-slate-900">
-                {marks[0].studentName}
+                {studentName || (marks.length > 0 ? marks[0].studentName : "—")}
               </p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {average !== null && (
+      {average !== null && average > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="GPA"
-            value={gpa?.toFixed(2) ?? "—"}
+            value={gpa !== null ? gpa.toFixed(2) : "—"}
             icon={TrendingUp}
             description="Grade point average"
             trend={(gpa ?? 0) >= 3.5 ? "up" : "neutral"}
@@ -184,7 +239,7 @@ const StudentMarksReportPage = () => {
         </div>
       )}
 
-      {average !== null && (
+      {average !== null && average > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>GPA Summary</CardTitle>
@@ -196,7 +251,7 @@ const StudentMarksReportPage = () => {
                 <div className="mb-1.5 flex items-center justify-between text-sm">
                   <span className="font-medium text-slate-700">GPA Progress</span>
                   <span className="font-semibold text-slate-900">
-                    {gpa?.toFixed(2)} / 4.0
+                    {gpa !== null ? gpa.toFixed(2) : "0.00"} / 4.0
                   </span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
@@ -229,7 +284,7 @@ const StudentMarksReportPage = () => {
         <EmptyState
           icon={GraduationCap}
           title="No marks recorded"
-          description="Your assessment results will appear here once they are published."
+          description="Your assessment results will appear here once they are published by your teacher."
         />
       ) : (
         <Card>

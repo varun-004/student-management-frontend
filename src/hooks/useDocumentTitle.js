@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const APP_NAME = "Student Management";
+const APP_NAME = "Campus 360";
 
 export function useDocumentTitle(title) {
   useEffect(() => {

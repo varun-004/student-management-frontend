@@ -100,7 +100,8 @@ function Dashboard() {
       totalStudents: stats?.totalStudents ?? 0,
       totalTeachers: stats?.totalTeachers ?? 0,
       totalCourses: stats?.totalCourses ?? 0,
-      attendancePercentage: stats?.attendancePercentage ?? stats?.attendance?.percentage ?? 88,
+      // FIX: averageAttendance comes from analytics API - no hardcoded fallback
+      attendancePercentage: stats?.averageAttendance ?? stats?.attendancePercentage ?? stats?.attendance?.percentage ?? 0,
       averageMarks: stats?.averageMarks ?? stats?.avgMarks ?? 0,
       topCourses,
       riskCount: riskSummary?.atRiskStudents ?? stats?.atRiskStudents ?? 0,
@@ -139,7 +140,7 @@ function Dashboard() {
     return {
       gpa: studentData?.gpa ?? 0,
       averageMarks: studentData?.average ?? 0,
-      attendance: studentData?.attendancePercentage ?? 92,
+      attendance: studentData?.attendancePercentage ?? 0,
       enrolledCourses: courseNames.length,
       marks,
       performanceData: marks.slice(0, 6).map((item) => ({
@@ -157,9 +158,9 @@ function Dashboard() {
     return (
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Teacher workspace"
+          eyebrow="Campus 360 Workspace"
           title="Teacher Dashboard"
-          description="A focused overview of your courses, attendance, and marks." 
+          description="A focused overview of your courses, attendance, and marks."
         >
           <Button variant="secondary" leftIcon={FileText} onClick={() => navigate("/teacher/courses")}>View Courses</Button>
           <Button leftIcon={CalendarCheck2} onClick={() => navigate("/attendance/mark")}>Mark Attendance</Button>
@@ -255,7 +256,7 @@ function Dashboard() {
   if (user?.role === "STUDENT") {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow="Student portal" title="Welcome back" description="Track your academic progress and stay on top of your goals.">
+        <PageHeader eyebrow="Campus 360 Student Portal" title="Welcome back" description="Track your academic progress and stay on top of your goals.">
           <Button variant="secondary" leftIcon={BarChart3} onClick={() => navigate("/marks/report")}>View Marks</Button>
           <Button leftIcon={CalendarCheck2} onClick={() => navigate("/attendance/report")}>My Attendance</Button>
         </PageHeader>
@@ -305,9 +306,9 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Operations overview"
+        eyebrow="Campus 360 Operations"
         title="Admin Dashboard"
-        description="A modern snapshot of your learning ecosystem, from student activity to academic performance."
+        description="A modern snapshot of your Campus 360 ecosystem, from student activity to academic performance."
       >
         <Button variant="secondary" leftIcon={FileText} onClick={() => navigate("/attendance/report")}>Export Summary</Button>
         <Button leftIcon={Sparkles} onClick={() => navigate("/analytics/risk")}>View Risk Analytics</Button>
@@ -371,8 +372,8 @@ function Dashboard() {
             <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
               <Button variant="secondary" leftIcon={BookOpen} onClick={() => navigate("/courses")}>Manage Courses</Button>
               <Button variant="secondary" leftIcon={Users2} onClick={() => navigate("/admin/teachers")}>Manage Teachers</Button>
-              <Button variant="secondary" leftIcon={CalendarCheck2} onClick={() => navigate("/attendance/report")}>Attendance Reports</Button>
-              <Button variant="secondary" leftIcon={GraduationCap} onClick={() => navigate("/marks/report")}>Marks Reports</Button>
+              <Button variant="secondary" leftIcon={GraduationCap} onClick={() => navigate("/admin/students")}>Manage Students</Button>
+              <Button variant="secondary" leftIcon={ShieldAlert} onClick={() => navigate("/analytics/risk")}>Risk Analytics</Button>
             </CardContent>
           </Card>
         </div>

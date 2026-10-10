@@ -46,16 +46,17 @@ const Register = () => {
       <Card className="w-full max-w-md border-slate-200/80 shadow-xl">
         <CardHeader className="px-8 pt-8">
           <CardTitle className="text-center text-2xl">Create account</CardTitle>
-          <p className="text-center text-sm text-slate-500">Join the student management platform in a few quick steps.</p>
+          <p className="text-center text-sm text-slate-500">Join Campus 360 in a few quick steps.</p>
         </CardHeader>
         <CardContent className="px-8 pb-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input label="Name" name="name" value={formData.name} onChange={handleChange} placeholder="Enter name" required />
             <Input label="Email" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter email" required />
             <Input label="Password" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Enter password" required />
+            {/* SECURITY FIX: ADMIN option removed from public registration */}
             <Select label="Role" name="role" value={formData.role} onChange={handleChange}>
               <option value="STUDENT">Student</option>
-              <option value="ADMIN">Admin</option>
+              <option value="TEACHER">Teacher</option>
             </Select>
             <Button type="submit" className="w-full" loading={loading}>
               {loading ? "Registering..." : "Register"}

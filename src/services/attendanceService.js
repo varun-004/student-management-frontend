@@ -18,6 +18,18 @@ export const markAttendance =
     return response.data;
   };
 
+export const markAttendanceBulk =
+  async (attendanceList) => {
+
+    const response =
+      await api.post(
+        "/api/attendance/bulk",
+        attendanceList
+      );
+
+    return response.data;
+  };
+
 /*
 |--------------------------------------------------------------------------
 | GET COURSE ATTENDANCE
@@ -88,6 +100,29 @@ export const exportAttendanceCsv =
       await api.get(
 
         `/api/attendance/course/${courseId}/export`,
+
+        {
+          responseType: "blob"
+        }
+
+      );
+
+    return response.data;
+};
+
+/*
+|--------------------------------------------------------------------------
+| EXPORT STUDENT ATTENDANCE CSV
+|--------------------------------------------------------------------------
+*/
+
+export const exportStudentAttendanceCsv =
+  async (studentId) => {
+
+    const response =
+      await api.get(
+
+        `/api/attendance/student/${studentId}/export`,
 
         {
           responseType: "blob"

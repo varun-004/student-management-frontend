@@ -35,7 +35,7 @@ const Navbar = ({ onMenuClick }) => {
     "/teacher/courses": "Manage your teaching courses",
     "/teacher/dashboard": "Teacher overview",
     "/admin/teachers": "Manage staff members",
-  }[location.pathname] || "Student Management Portal";
+  }[location.pathname] || "Campus 360";
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur sm:px-6">
