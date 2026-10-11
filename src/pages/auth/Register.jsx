@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/authService";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import notify from "../../utils/toast";
+import { ArrowLeft } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from "../../components/ui";
 
 const Register = () => {
@@ -45,6 +46,13 @@ const Register = () => {
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),_transparent_35%),linear-gradient(135deg,_#f8fafc,_#f0fdf4)] px-4 py-10">
       <Card className="w-full max-w-md border-slate-200/80 shadow-xl">
         <CardHeader className="px-8 pt-8">
+          <Link
+            to="/"
+            className="mb-2 inline-flex items-center text-xs font-semibold text-slate-500 transition hover:text-brand-600 w-fit"
+          >
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            Back to Campus 360
+          </Link>
           <CardTitle className="text-center text-2xl">Create account</CardTitle>
           <p className="text-center text-sm text-slate-500">Join Campus 360 in a few quick steps.</p>
         </CardHeader>

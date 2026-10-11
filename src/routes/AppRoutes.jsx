@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import LandingPage from "../pages/landing/LandingPage";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 
@@ -50,6 +51,8 @@ const AppRoutes = () => {
     <BrowserRouter>
       <Routes>
         {/* PUBLIC ROUTES */}
+
+        <Route path="/" element={<LandingPage />} />
 
         <Route path="/login" element={<Login />} />
 
@@ -408,10 +411,6 @@ const AppRoutes = () => {
         {/* ERROR ROUTES */}
 
         <Route path="/unauthorized" element={<Unauthorized />} />
-
-        {/* DEFAULT REDIRECT */}
-
-        <Route path="/" element={<Navigate to="/login" />} />
 
         {/* 404 */}
 
