@@ -7,7 +7,7 @@ import { createStudent } from "../utils/studentFactory";
 import { EnrollmentPage } from "../pages/EnrollmentPage";
 import { AttendancePage } from "../pages/AttendancePage";
 
-test("Student Management End-to-End", async ({ page }) => {
+test("Campus 360 End-to-End", async ({ page }) => {
 
  // Register Student
 const registerPage = new RegisterPage(page);

@@ -164,7 +164,7 @@ const LandingFooter = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-6 sm:flex-row text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} Campus 360 Student Management System. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Campus 360. All rights reserved.</p>
 
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline">React • Vite • Tailwind CSS • Spring Boot</span>

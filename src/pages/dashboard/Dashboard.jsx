@@ -256,7 +256,7 @@ function Dashboard() {
   if (user?.role === "STUDENT") {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow="Campus 360 Student Portal" title="Welcome back" description="Track your academic progress and stay on top of your goals.">
+        <PageHeader eyebrow="Campus 360" title="Welcome back" description="Track your academic progress and stay on top of your goals.">
           <Button variant="secondary" leftIcon={BarChart3} onClick={() => navigate("/marks/report")}>View Marks</Button>
           <Button leftIcon={CalendarCheck2} onClick={() => navigate("/attendance/report")}>My Attendance</Button>
         </PageHeader>

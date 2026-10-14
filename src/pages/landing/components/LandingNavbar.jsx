@@ -104,7 +104,7 @@ const LandingNavbar = () => {
                 </span>
               </div>
               <span className="text-[11px] font-medium text-slate-500">
-                Student Management System
+                Unified Campus Platform
               </span>
             </div>
           </Link>
